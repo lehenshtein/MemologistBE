@@ -3,8 +3,10 @@
   "version": "1.0.0",
   "description": "test backend for memologist app",
   "main": "src/server.ts",
+  "engines": { "node": "16.15.1", "npm": "8.11.0" },
   "scripts": {
-    "build": "rm -rf build/ && tsc",
+    "build": "tsc",
+    "oldbuild": "rm -rf build/ && tsc",
     "start": "node build/server.js",
     "watch": "nodemon",
     "heroku-prebuild": "npm install --force"
