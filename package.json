@@ -9,7 +9,7 @@
     "oldbuild": "rm -rf build/ && tsc",
     "start": "node build/server.js",
     "watch": "nodemon",
-    "heroku-prebuild": "npm install --force"
+    "heroku-prebuild": "npm install --legacy-peer-deps"
   },
   "author": "",
   "license": "ISC",
