@@ -3,7 +3,7 @@ import mongoose from 'mongoose';
 import { config } from './config/config';
 import Logger from './library/logger';
 import http from 'http';
-import { AuthorsRoutes } from './routes/routes';
+import { AuthorsRoutes, BooksRoutes, PostsRoutes } from './routes/routes';
 
 const router = express();
 // Connect to mongo
@@ -57,6 +57,8 @@ function StartServer () {
 
   // Routes
   router.use('/authors', AuthorsRoutes);
+  router.use('/books', BooksRoutes);
+  router.use('/posts', PostsRoutes);
 
   // HealthCheck
   router.get('/ping', (req, res, next) => res.status(200).json({ message: 'ping successfull' }));
