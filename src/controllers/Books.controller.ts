@@ -19,9 +19,9 @@ const readBook = (req: Request, res: Response, next: NextFunction) => {
   const { bookId } = req.params;
 
   return Book.findById(bookId)
-    .populate('author')//form ref author we get author obj and can get his name
-    .select('-__v')//get rid of field
-    .select('-true')//get rid of field
+    .populate('author')// form ref author we get author obj and can get his name
+    .select('-__v')// get rid of field
+    .select('-true')// get rid of field
     .then(book => book ? res.status(200).json(book) : res.status(404).json({ message: 'not found' }))
     .catch(err => res.status(500).json({ message: 'Server error', err }));
 };
@@ -29,8 +29,8 @@ const readBook = (req: Request, res: Response, next: NextFunction) => {
 const readAll = (req: Request, res: Response, next: NextFunction) => {
   return Book.find()
     .populate('author')
-    .select('-__v')//get rid of field
-    .select('-true')//get rid of field
+    .select('-__v')// get rid of field
+    .select('-true')// get rid of field
     .then(books => res.status(200).json(books))
     .catch(err => res.status(500).json({ message: 'Server error', err }));
 };

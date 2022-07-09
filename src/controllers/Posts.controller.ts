@@ -22,16 +22,17 @@ const readPost = (req: Request, res: Response, next: NextFunction) => {
   const { postId } = req.params;
 
   return Post.findById(postId)
-    .populate('author')//form ref author we get author obj and can get his name
-    .select('-__v')//get rid of field
+    .populate('author')// form ref author we get author obj and can get his name
+    .select('-__v')// get rid of field
     .then(post => post ? res.status(200).json(post) : res.status(404).json({ message: 'not found' }))
     .catch(err => res.status(500).json({ message: 'Server error', err }));
 };
 
 const readAll = (req: Request, res: Response, next: NextFunction) => {
   return Post.find()
+    .sort('-createdAt')
     .populate('author')
-    .select('-__v')//get rid of field
+    .select('-__v')// get rid of field
     .then(posts => res.status(200).json(posts))
     .catch(err => res.status(500).json({ message: 'Server error', err }));
 };
