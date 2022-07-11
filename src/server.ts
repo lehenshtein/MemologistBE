@@ -38,7 +38,7 @@ function StartServer () {
 
   // Rules of API
   router.use((req, res, next) => {
-    const allowedOrigins = ['https://memologist.herokuapp.com', 'http://localhost:4200'];
+    const allowedOrigins = ['https://memologist.herokuapp.com', 'http://localhost:4200', 'http://localhost:8080'];
     const origin = req.headers.origin;
     if (allowedOrigins.includes(origin!)) {
       res.setHeader('Access-Control-Allow-Origin', origin!);

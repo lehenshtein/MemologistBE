@@ -39,7 +39,6 @@ const readAll = (req: Request, res: Response, next: NextFunction) => {
 
 const updatePost = (req: Request, res: Response, next: NextFunction) => {
   const { postId } = req.params;
-  console.log(req.body);
 
   return Post.findById(postId)
     .then(post => {

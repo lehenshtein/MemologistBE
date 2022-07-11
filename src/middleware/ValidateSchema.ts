@@ -14,7 +14,7 @@ export const ValidateSchema = (schema: ObjectSchema) => {
     } catch (err) {
       Logger.err(err);
 
-      return res.status(422).json({err});
+      return res.status(422).json({ err });
     }
   };
 };
@@ -42,18 +42,18 @@ export const Schema = {
 
   post: {
     create: Joi.object<IPost>({
-      title: Joi.string().required(),
-      text: Joi.string().required(),
+      title: Joi.string().required().min(8).max(20),
+      text: Joi.string().required().min(20).max(2000),
       tags: Joi.array().items(Joi.string()),
-      imgUrl: Joi.string(),
+      imgUrl: Joi.string().optional().allow('').max(120),
       author: Joi.string().regex(/^[0-9a-fA=F]{24}$/).required()
     }),
     update: Joi.object<IPost>({
-      title: Joi.string().required(),
-      text: Joi.string().required(),
+      title: Joi.string().required().min(8).max(20),
+      text: Joi.string().required().min(20).max(2000),
       tags: Joi.array().items(Joi.string()),
-      imgUrl: Joi.string(),
+      imgUrl: Joi.string().optional().allow('').max(120),
       author: Joi.string().regex(/^[0-9a-fA=F]{24}$/).required()
     })
   }
-}
+};
