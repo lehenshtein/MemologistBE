@@ -7,9 +7,9 @@ import Crypto from 'crypto';
 const register = async (req: Request, res: Response, next: NextFunction) => {
   const { name, email, password } = req.body;
 
-  const [ nameExists, emailExists ] = await Promise.all([
-    User.findOne({ name: name }, '_id'),
-    User.findOne({ email: email }, '_id'),
+  const [nameExists, emailExists] = await Promise.all([
+    User.findOne({ name }, '_id'),
+    User.findOne({ email }, '_id')
   ]);
 
   if (nameExists) {
@@ -19,14 +19,14 @@ const register = async (req: Request, res: Response, next: NextFunction) => {
   }
 
   const salt = generateSalt();
-  const hashed_password = hashPassword(password, salt);
+  const hashedPassword = hashPassword(password, salt);
 
   const user = new User({
     _id: new mongoose.Types.ObjectId(),
-    name: name,
-    email: email,
-    password: hashed_password,
-    salt: salt
+    name,
+    email,
+    password: hashedPassword,
+    salt
   });
 
   return user.save()
@@ -37,13 +37,13 @@ const register = async (req: Request, res: Response, next: NextFunction) => {
 const login = async (req: Request, res: Response, next: NextFunction) => {
   const { email, password } = req.body;
 
-  const user = await User.findOne({ email: email }, 'name email salt password');
+  const user = await User.findOne({ email }, 'name email salt password');
   if (!user) {
     return res.status(400).json({ message: 'Invalid email/password' });
   }
 
-  const hashed_password = hashPassword(password, user.salt);
-  if (hashed_password === user.password) {
+  const hashedPassword = hashPassword(password, user.salt);
+  if (hashedPassword === user.password) {
     return res.status(201).json({ token: createToken(user.name, user.email) });
   } else {
     return res.status(400).json({ message: 'Invalid email/password' });
@@ -60,7 +60,7 @@ const hashPassword = (password: string, salt: string) => {
 
 const createToken = (name: string, email: string) => {
   return jwt.sign(
-    { name: name, email: email },
+    { name, email },
     process.env.JWT_SIGN_KEY || '123',
     { expiresIn: '2 days' }
   );
