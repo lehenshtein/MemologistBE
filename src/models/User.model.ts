@@ -17,8 +17,8 @@ export interface IUser {
   points: number,
   status: 'default' | 'muted' | 'banned',
   statusTillDate: Date | null,
-  statusChangeDate: Date,
-  createdDate: Date,
+  updatedAt: Date,
+  createdAt: Date,
   createdPosts: string[],
   options: UserOptionsInterface
 }
@@ -37,8 +37,6 @@ const UserSchema: Schema = new Schema(
     points: { type: Number, required: true, default: 0 },
     status: { type: String, required: true, default: 'default' },
     statusTillDate: { type: Date, required: false },
-    statusChangeDate: { type: Date, required: false, default: Date.now },
-    createdDate: { type: Date, required: false, default: Date.now },
     createdPosts: [{ type: Schema.Types.ObjectId, ref: 'Post' }],
     options: {
       selectedLocale: { type: String, required: true, default: 'ua' },
@@ -48,7 +46,8 @@ const UserSchema: Schema = new Schema(
     }
   },
   {
-    versionKey: false
+    versionKey: false,
+    timestamps: true
   }
 );
 

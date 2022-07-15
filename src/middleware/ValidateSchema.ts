@@ -61,11 +61,11 @@ export const Schema = {
     register: Joi.object({
       name: Joi.string().required().min(4).max(30),
       email: Joi.string().required().email({ tlds: { allow: false } }),
-      password: Joi.string().required().min(8).max(30),
+      password: Joi.string().required().min(8).max(40)
     }),
     login: Joi.object({
       email: Joi.string().required().email({ tlds: { allow: false } }),
-      password: Joi.string().required().min(8).max(30),
+      password: Joi.string().required().min(8).max(40)
     })
   }
 };
