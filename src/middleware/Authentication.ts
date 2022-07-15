@@ -4,14 +4,20 @@ import jwt from 'jsonwebtoken';
 import User from '../models/User.model';
 
 
+export interface TokenInterface {
+   email: string;
+   name: string;
+   userId: number;
+}
+
 export const addUserToRequest = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const token = req.get('authorization');
     if (token) {
       try {
-        const token_payload = jwt.verify(token, process.env.JWT_SIGN_KEY || '123');
-        req.token_payload = token_payload;
-        req.user = await User.findOne({ email: token_payload.email });
+        const tokenPayload = jwt.verify(token, process.env.JWT_SIGN_KEY || '123') as TokenInterface;
+        req.tokenPayload = tokenPayload;
+        req.user = await User.findOne({ email: tokenPayload.email });
       } catch (err) {
         Logger.log(`Received invalid token ${token}`);
       }
