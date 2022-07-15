@@ -1,7 +1,7 @@
 import express from 'express';
 import controller from '../controllers/Posts.controller';
 import { Schema, ValidateSchema } from '../middleware/ValidateSchema';
-import { requireAuthentication } from "../middleware/Authentication";
+import { requireAuthentication } from '../middleware/Authentication';
 
 const router = express.Router();
 

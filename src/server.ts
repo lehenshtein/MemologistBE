@@ -4,7 +4,7 @@ import { config } from './config/config';
 import Logger from './library/logger';
 import http from 'http';
 import { AuthorsRoutes, AuthRoutes, BooksRoutes, PostsRoutes } from './routes/routes';
-import { addUserToRequest } from "./middleware/Authentication";
+import { addUserToRequest } from './middleware/Authentication';
 
 const router = express();
 // Connect to mongo

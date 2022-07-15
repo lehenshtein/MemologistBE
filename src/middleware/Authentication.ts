@@ -1,16 +1,19 @@
-import {NextFunction, Request, Response} from "express";
-import Logger from "../library/logger";
+import { NextFunction, Request, Response } from 'express';
+import Logger from '../library/logger';
 import jwt from 'jsonwebtoken';
-import User from '../models/User.model';
-
+import User, { IUser } from '../models/User.model';
 
 export interface TokenInterface {
-   email: string;
-   name: string;
-   userId: number;
+  email: string;
+  name: string;
+  userId: number;
+}
+export interface AuthRequest extends Request {
+  user?: IUser | null;
+  tokenPayload?: TokenInterface;
 }
 
-export const addUserToRequest = async (req: Request, res: Response, next: NextFunction) => {
+export const addUserToRequest = async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
     const token = req.get('authorization');
     if (token) {
@@ -30,9 +33,9 @@ export const addUserToRequest = async (req: Request, res: Response, next: NextFu
   }
 };
 
-export const requireAuthentication = (req: Request, res: Response, next: NextFunction) => {
+export const requireAuthentication = (req: AuthRequest, res: Response, next: NextFunction) => {
   if (!req.user) {
-    return res.status(401).json({ 'message': 'Invalid or missing authentication token' });
+    return res.status(401).json({ message: 'Invalid or missing authentication token' });
   }
   next();
 };

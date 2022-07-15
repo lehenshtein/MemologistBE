@@ -1,5 +1,11 @@
 import mongoose, { Document, Schema } from 'mongoose';
 // import * as mongoose from 'mongoose';
+interface UserOptionsInterface {
+  selectedLocale: 'en' | 'ua',
+  locale: string,
+  showContent: 'en' | 'ua' | 'all',
+  nsfw: boolean
+}
 
 export interface IUser {
   name: string,
@@ -15,13 +21,6 @@ export interface IUser {
   createdDate: Date,
   createdPosts: string[],
   options: UserOptionsInterface
-}
-
-interface UserOptionsInterface {
-  selectedLocale: 'en' | 'ua',
-  locale: string,
-  showContent: 'en' | 'ua' | 'all',
-  nsfw: boolean
 }
 
 export interface IUserModel extends IUser, Document {
