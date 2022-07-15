@@ -3,7 +3,8 @@ import mongoose from 'mongoose';
 import { config } from './config/config';
 import Logger from './library/logger';
 import http from 'http';
-import { AuthorsRoutes, BooksRoutes, PostsRoutes } from './routes/routes';
+import { AuthorsRoutes, AuthRoutes, BooksRoutes, PostsRoutes } from './routes/routes';
+import { addUserToRequest } from "./middleware/Authentication";
 
 const router = express();
 // Connect to mongo
@@ -55,8 +56,12 @@ function StartServer () {
     next();
   });
 
+  // auth middleware
+  router.use(addUserToRequest);
+
   // Routes
   router.use('/authors', AuthorsRoutes);
+  router.use('/auth', AuthRoutes);
   router.use('/books', BooksRoutes);
   router.use('/posts', PostsRoutes);
 
