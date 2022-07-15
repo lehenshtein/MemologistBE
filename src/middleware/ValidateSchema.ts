@@ -55,5 +55,17 @@ export const Schema = {
       imgUrl: Joi.string().optional().allow('', null).max(120),
       author: Joi.string().regex(/^[0-9a-fA=F]{24}$/).required()
     })
+  },
+
+  authentication: {
+    register: Joi.object({
+      name: Joi.string().required().min(4).max(30),
+      email: Joi.string().required().email({ tlds: { allow: false } }),
+      password: Joi.string().required().min(8).max(30),
+    }),
+    login: Joi.object({
+      email: Joi.string().required().email({ tlds: { allow: false } }),
+      password: Joi.string().required().min(8).max(30),
+    })
   }
 };
