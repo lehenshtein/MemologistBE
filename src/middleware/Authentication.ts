@@ -1,7 +1,7 @@
 import { NextFunction, Request, Response } from 'express';
 import Logger from '../library/logger';
 import jwt from 'jsonwebtoken';
-import User, { IUser } from '../models/User.model';
+import User, { IUserModel } from '../models/User.model';
 
 export interface TokenInterface {
   email: string;
@@ -9,7 +9,11 @@ export interface TokenInterface {
   userId: number;
 }
 export interface AuthRequest extends Request {
-  user?: IUser | null;
+  user?: IUserModel | null;
+  tokenPayload?: TokenInterface;
+}
+export interface AuthResponse extends Response {
+  user?: IUserModel | null;
   tokenPayload?: TokenInterface;
 }
 

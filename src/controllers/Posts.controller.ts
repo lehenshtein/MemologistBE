@@ -1,9 +1,15 @@
 import { NextFunction, Request, Response } from 'express';
 import mongoose from 'mongoose';
-import Post from '../models/Posts.model';
+import Post, { IPostModel, marks } from '../models/Posts.model';
+import User, { IUserModel } from '../models/User.model';
+import { AuthRequest } from '../middleware/Authentication';
 
-const createPost = (req: Request, res: Response, next: NextFunction) => {
-  const { title, author, text, tags, imgUrl } = req.body;
+const createPost = (req: AuthRequest, res: Response, next: NextFunction) => {
+  const { title, text, tags, imgUrl } = req.body;
+  const author = req.user?._id;
+  if (!author) {
+    return res.status(401).json({ message: 'Please sign-in or sign-up' });
+  }
   const post = new Post({
     _id: new mongoose.Types.ObjectId(),
     title,
@@ -28,13 +34,38 @@ const readPost = (req: Request, res: Response, next: NextFunction) => {
     .catch(err => res.status(500).json({ message: 'Server error', err }));
 };
 
-const readAll = (req: Request, res: Response, next: NextFunction) => {
-  return Post.find()
-    .sort('-createdAt')
-    .populate('author')
-    .select('-__v')// get rid of field
-    .then(posts => res.status(200).json(posts))
-    .catch(err => res.status(500).json({ message: 'Server error', err }));
+const readAll = async (req: AuthRequest, res: Response, next: NextFunction) => {
+  const userId = req.user?._id;
+  let user: IUserModel | null = null;
+  if (userId) {
+    user = await User.findById(userId);
+  }
+  try {
+    const posts: IPostModel[] = await Post.find()
+      .sort('-createdAt')
+      .populate('author', 'name -_id')
+      .select('-__v'); // get rid of field
+
+    if (user) {
+      posts.map((post: IPostModel) => {
+        const mark: marks | undefined = user?.markedPosts.get(post._id);
+        console.log(mark);
+        mark ? post.marked = mark : post.marked = 'default';
+        return post;
+      });
+    }
+
+    return res.status(200).json(posts);
+  } catch (err) {
+    res.status(500).json({ message: 'Server error', err });
+  }
+
+  // return Post.find()
+  //   .sort('-createdAt')
+  //   .populate('author')
+  //   .select('-__v')// get rid of field
+  //   .then(posts => res.status(200).json(posts))
+  //   .catch(err => res.status(500).json({ message: 'Server error', err }));
 };
 
 const updatePost = (req: Request, res: Response, next: NextFunction) => {
@@ -65,4 +96,39 @@ const deletePost = (req: Request, res: Response, next: NextFunction) => {
     .catch(err => res.status(500).json({ message: 'Server error', err }));
 };
 
-export default { createPost, readPost, readAll, updatePost, deletePost };
+const markPost = async (req: AuthRequest, res: Response, next: NextFunction) => {
+  const { id, markType } = req.body;
+  const userId = req.user?._id;
+  const user: IUserModel | null = await User.findById(userId);
+  if (!user) {
+    return res.status(401).json({ message: 'Please sign-in or sign-up' });
+  }
+
+  const post = await Post.findById(id);
+  if (!post) {
+    return res.status(404).json({ message: 'Post not found' });
+  }
+  if (markType === 'liked') {
+    post.score++;
+    post.set('score', post.score);
+  }
+  if (markType === 'disliked') {
+    post.score--;
+    post.set('score', post.score--);
+  }
+  const recentPostStatus: marks | undefined = user.markedPosts.get(post._id);
+
+  if (recentPostStatus) {
+    user.markedPosts.delete(post._id);
+  } else {
+    user.markedPosts.set(post._id, markType);
+    // user.set('markedPosts', { [post._id]: markType });
+  }
+
+  await user.save();
+  return post.save()
+    .then(post => res.status(201).json({ score: post.score }))
+    .catch(err => res.status(500).json({ message: 'Server error', err }));
+};
+
+export default { createPost, readPost, readAll, updatePost, deletePost, markPost };

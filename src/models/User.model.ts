@@ -1,4 +1,5 @@
 import mongoose, { Document, Schema } from 'mongoose';
+import { marks } from './Posts.model';
 // import * as mongoose from 'mongoose';
 interface UserOptionsInterface {
   selectedLocale: 'en' | 'ua',
@@ -20,6 +21,7 @@ export interface IUser {
   updatedAt: Date,
   createdAt: Date,
   createdPosts: string[],
+  markedPosts: Map<string, marks>,
   options: UserOptionsInterface
 }
 
@@ -38,6 +40,7 @@ const UserSchema: Schema = new Schema(
     status: { type: String, required: true, default: 'default' },
     statusTillDate: { type: Date, required: false },
     createdPosts: [{ type: Schema.Types.ObjectId, ref: 'Post' }],
+    markedPosts: { type: Map, of: String },
     options: {
       selectedLocale: { type: String, required: true, default: 'ua' },
       locale: { type: String, required: false },

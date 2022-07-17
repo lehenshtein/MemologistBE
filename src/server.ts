@@ -3,7 +3,7 @@ import mongoose from 'mongoose';
 import { config } from './config/config';
 import Logger from './library/logger';
 import http from 'http';
-import { AuthorsRoutes, AuthRoutes, BooksRoutes, PostsRoutes } from './routes/routes';
+import { AuthRoutes, PostsRoutes } from './routes/routes';
 import { addUserToRequest } from './middleware/Authentication';
 
 const router = express();
@@ -57,12 +57,10 @@ function StartServer () {
   });
 
   // auth middleware
-  router.use(addUserToRequest);
+  router.use(addUserToRequest as express.RequestHandler);
 
   // Routes
-  router.use('/authors', AuthorsRoutes);
   router.use('/auth', AuthRoutes);
-  router.use('/books', BooksRoutes);
   router.use('/posts', PostsRoutes);
 
   // HealthCheck
