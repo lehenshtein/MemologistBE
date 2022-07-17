@@ -48,10 +48,7 @@ const readAll = async (req: AuthRequest, res: Response, next: NextFunction) => {
 
     if (user) {
       posts.map((post: IPostModel) => {
-        const mark: marks | undefined = user?.markedPosts.get(post._id);
-        console.log(mark);
-        mark ? post.marked = mark : post.marked = 'default';
-        return post;
+        return mapPostsMarks(post, user!);
       });
     }
 
@@ -67,6 +64,11 @@ const readAll = async (req: AuthRequest, res: Response, next: NextFunction) => {
   //   .then(posts => res.status(200).json(posts))
   //   .catch(err => res.status(500).json({ message: 'Server error', err }));
 };
+function mapPostsMarks (post: IPostModel, user: IUserModel): IPostModel {
+  const mark: marks | undefined = user?.markedPosts.get(post._id);
+  mark ? post.marked = mark : post.marked = 'default';
+  return post;
+}
 
 const updatePost = (req: Request, res: Response, next: NextFunction) => {
   const { postId } = req.params;
@@ -98,9 +100,10 @@ const deletePost = (req: Request, res: Response, next: NextFunction) => {
 
 const markPost = async (req: AuthRequest, res: Response, next: NextFunction) => {
   const { id, markType } = req.body;
-  const userId = req.user?._id;
-  const user: IUserModel | null = await User.findById(userId);
-  if (!user) {
+  console.log(req.user);
+  // const userId = req.user?._id;
+  // const user: IUserModel | null = await User.findById(userId);
+  if (!req.user) {
     return res.status(401).json({ message: 'Please sign-in or sign-up' });
   }
 
@@ -116,16 +119,16 @@ const markPost = async (req: AuthRequest, res: Response, next: NextFunction) => 
     post.score--;
     post.set('score', post.score--);
   }
-  const recentPostStatus: marks | undefined = user.markedPosts.get(post._id);
+  const recentPostStatus: marks | undefined = req.user.markedPosts.get(post._id);
 
   if (recentPostStatus) {
-    user.markedPosts.delete(post._id);
+    req.user.markedPosts.delete(post._id);
   } else {
-    user.markedPosts.set(post._id, markType);
+    req.user.markedPosts.set(post._id, markType);
     // user.set('markedPosts', { [post._id]: markType });
   }
 
-  await user.save();
+  await req.user.save();
   return post.save()
     .then(post => res.status(201).json({ score: post.score }))
     .catch(err => res.status(500).json({ message: 'Server error', err }));

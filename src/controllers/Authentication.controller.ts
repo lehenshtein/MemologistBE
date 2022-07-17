@@ -26,8 +26,7 @@ const register = async (req: Request, res: Response, next: NextFunction) => {
     name,
     email,
     password: hashedPassword,
-    salt,
-    markedPosts: new Map()
+    salt
   });
 
   return user.save()
