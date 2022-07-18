@@ -20,7 +20,7 @@ const PostSchema: Schema = new Schema({
   tags: { type: [String], required: false },
   imgUrl: { type: String, required: false },
   author: { type: Schema.Types.ObjectId, required: true, ref: 'User' },
-  score: { type: Number, required: false },
+  score: { type: Number, required: false, default: 0 },
   marked: { type: String, required: false, ref: 'User' }
 }, { timestamps: true });
 
