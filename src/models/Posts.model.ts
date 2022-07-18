@@ -1,6 +1,5 @@
 import mongoose, { Document, Schema } from 'mongoose';
-
-export type marks = 'liked' | 'disliked' | 'default';
+import { marks } from './marks.type';
 
 export interface IPost {
   title: string;

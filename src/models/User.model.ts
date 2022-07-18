@@ -1,6 +1,6 @@
 import mongoose, { Document, Schema } from 'mongoose';
-import { marks } from './Posts.model';
-// import * as mongoose from 'mongoose';
+import { marks } from './marks.type';
+
 interface UserOptionsInterface {
   selectedLocale: 'en' | 'ua',
   locale: string,

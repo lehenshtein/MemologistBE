@@ -1,8 +1,9 @@
 import { NextFunction, Request, Response } from 'express';
 import mongoose from 'mongoose';
-import Post, { IPostModel, marks } from '../models/Posts.model';
+import Post, { IPostModel } from '../models/Posts.model';
 import User, { IUserModel } from '../models/User.model';
 import { AuthRequest } from '../middleware/Authentication';
+import { marks } from '../models/marks.type';
 
 const createPost = (req: AuthRequest, res: Response, next: NextFunction) => {
   const { title, text, tags, imgUrl } = req.body;
@@ -24,22 +25,37 @@ const createPost = (req: AuthRequest, res: Response, next: NextFunction) => {
     .catch(err => res.status(500).json({ message: 'Server error', err }));
 };
 
-const readPost = (req: Request, res: Response, next: NextFunction) => {
+const readPost = async (req: AuthRequest, res: Response, next: NextFunction) => {
   const { postId } = req.params;
+  const user: IUserModel | null | undefined = req.user;
 
-  return Post.findById(postId)
-    .populate('author')// form ref author we get author obj and can get his name
-    .select('-__v')// get rid of field
-    .then(post => post ? res.status(200).json(post) : res.status(404).json({ message: 'not found' }))
-    .catch(err => res.status(500).json({ message: 'Server error', err }));
+  try {
+    const post: IPostModel | null = await Post.findById(postId)
+      .populate('author')// form ref author we get author obj and can get his name
+      .select('-__v');// get rid of field
+    if (!post) {
+      return res.status(404).json({ message: 'not found' });
+    }
+    if (user && post) {
+      const mark: marks | undefined = user?.markedPosts.get(post._id);
+      mark ? post.marked = mark : post.marked = 'default';
+    }
+
+    return res.status(200).json(post);
+  } catch (err) {
+    return res.status(500).json({ message: 'Server error', err });
+  }
+  //
+  // return Post.findById(postId)
+  //   .populate('author')// form ref author we get author obj and can get his name
+  //   .select('-__v')// get rid of field
+  //   .then(post => post ? res.status(200).json(post) : res.status(404).json({ message: 'not found' }))
+  //   .catch(err => res.status(500).json({ message: 'Server error', err }));
 };
 
 const readAll = async (req: AuthRequest, res: Response, next: NextFunction) => {
-  const userId = req.user?._id;
-  let user: IUserModel | null = null;
-  if (userId) {
-    user = await User.findById(userId);
-  }
+  const user: IUserModel | null | undefined = req.user;
+
   try {
     const posts: IPostModel[] = await Post.find()
       .sort('-createdAt')
@@ -64,6 +80,7 @@ const readAll = async (req: AuthRequest, res: Response, next: NextFunction) => {
   //   .then(posts => res.status(200).json(posts))
   //   .catch(err => res.status(500).json({ message: 'Server error', err }));
 };
+
 function mapPostsMarks (post: IPostModel, user: IUserModel): IPostModel {
   const mark: marks | undefined = user?.markedPosts.get(post._id);
   mark ? post.marked = mark : post.marked = 'default';
@@ -100,9 +117,6 @@ const deletePost = (req: Request, res: Response, next: NextFunction) => {
 
 const markPost = async (req: AuthRequest, res: Response, next: NextFunction) => {
   const { id, markType } = req.body;
-  console.log(req.user);
-  // const userId = req.user?._id;
-  // const user: IUserModel | null = await User.findById(userId);
   if (!req.user) {
     return res.status(401).json({ message: 'Please sign-in or sign-up' });
   }
@@ -125,7 +139,6 @@ const markPost = async (req: AuthRequest, res: Response, next: NextFunction) => 
     req.user.markedPosts.delete(post._id);
   } else {
     req.user.markedPosts.set(post._id, markType);
-    // user.set('markedPosts', { [post._id]: markType });
   }
 
   await req.user.save();
