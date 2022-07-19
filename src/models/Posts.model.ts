@@ -20,7 +20,7 @@ const PostSchema: Schema = new Schema({
   imgUrl: { type: String, required: false },
   author: { type: Schema.Types.ObjectId, required: true, ref: 'User' },
   score: { type: Number, required: false, default: 0 },
-  marked: { type: String, required: false, ref: 'User' }
+  marked: { type: String, required: false, default: 'default', ref: 'User' }
 }, { timestamps: true });
 
 export default mongoose.model<IPostModel>('Post', PostSchema);

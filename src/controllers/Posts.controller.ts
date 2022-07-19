@@ -1,7 +1,7 @@
 import { NextFunction, Request, Response } from 'express';
 import mongoose from 'mongoose';
 import Post, { IPostModel } from '../models/Posts.model';
-import User, { IUserModel } from '../models/User.model';
+import { IUserModel } from '../models/User.model';
 import { AuthRequest } from '../middleware/Authentication';
 import { marks } from '../models/marks.type';
 
@@ -31,7 +31,7 @@ const readPost = async (req: AuthRequest, res: Response, next: NextFunction) => 
 
   try {
     const post: IPostModel | null = await Post.findById(postId)
-      .populate('author')// form ref author we get author obj and can get his name
+      .populate('author', '-_id name')// form ref author we get author obj and can get his name
       .select('-__v');// get rid of field
     if (!post) {
       return res.status(404).json({ message: 'not found' });

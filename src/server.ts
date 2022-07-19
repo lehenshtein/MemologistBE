@@ -3,7 +3,7 @@ import mongoose from 'mongoose';
 import { config } from './config/config';
 import Logger from './library/logger';
 import http from 'http';
-import { AuthRoutes, PostsRoutes } from './routes/routes';
+import { AuthRoutes, CommentRoutes, PostsRoutes } from './routes/routes';
 import { addUserToRequest } from './middleware/Authentication';
 
 const router = express();
@@ -62,6 +62,7 @@ function StartServer () {
   // Routes
   router.use('/auth', AuthRoutes);
   router.use('/posts', PostsRoutes);
+  router.use('/comment', CommentRoutes);
 
   // HealthCheck
   router.get('/ping', (req, res, next) => res.status(200).json({ message: 'ping successfull' }));
