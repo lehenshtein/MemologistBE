@@ -2,12 +2,17 @@ import { AuthRequest } from '../middleware/Authentication';
 import { NextFunction, Response, Request } from 'express';
 import Comment, { ICommentCreate, ICommentModel } from '../models/Comment.model';
 import mongoose from 'mongoose';
+import Post from '../models/Posts.model';
+import { marks } from '../models/marks.type';
 
 const createComment = (req: AuthRequest, res: Response, next: NextFunction) => {
   const { text, post }: ICommentCreate = req.body;
   const author = req.user;
   if (!author) {
     return res.status(401).json({ message: 'Please sign-in or sign-up' });
+  }
+  if (author.status === 'banned' || author.status === 'muted') {
+    return res.status(403).json({ message: 'You was banned or muted' });
   }
   const comment = new Comment({
     _id: new mongoose.Types.ObjectId(),
@@ -49,6 +54,39 @@ const getCommentsForUser = async (req: AuthRequest, res: Response, next: NextFun
   } catch (err) {
     return res.status(500).json({ message: 'Server error', err });
   }
+};
+
+// TODO: finish marking comment
+const markComment = async (req: AuthRequest, res: Response, next: NextFunction) => {
+  const { id, markType } = req.body;
+  if (!req.user) {
+    return res.status(401).json({ message: 'Please sign-in or sign-up' });
+  }
+
+  const comment: ICommentModel | null = await Comment.findById(id);
+  if (!comment) {
+    return res.status(404).json({ message: 'Comment not found' });
+  }
+  if (markType === 'liked') {
+    comment.score++;
+    comment.set('score', comment.score);
+  }
+  if (markType === 'disliked') {
+    comment.score--;
+    comment.set('score', comment.score--);
+  }
+  const recentCommentStatus: marks | undefined = req.user.markedComments.get(comment._id);
+
+  if (recentCommentStatus) {
+    req.user.markedComments.delete(comment._id);
+  } else {
+    req.user.markedComments.set(comment._id, markType);
+  }
+
+  await req.user.save();
+  return comment.save()
+    .then(comment => res.status(201).json({ score: comment.score }))
+    .catch(err => res.status(500).json({ message: 'Server error', err }));
 };
 
 export default { createComment, getComments, getCommentsForUser };

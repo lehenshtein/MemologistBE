@@ -1,15 +1,18 @@
 import { NextFunction, Request, Response } from 'express';
 import mongoose from 'mongoose';
 import Post, { IPostModel } from '../models/Posts.model';
-import { IUserModel } from '../models/User.model';
+import { IUser, IUserModel } from '../models/User.model';
 import { AuthRequest } from '../middleware/Authentication';
 import { marks } from '../models/marks.type';
 
 const createPost = (req: AuthRequest, res: Response, next: NextFunction) => {
   const { title, text, tags, imgUrl } = req.body;
-  const author = req.user?._id;
+  const author: IUser = req.user?._id;
   if (!author) {
     return res.status(401).json({ message: 'Please sign-in or sign-up' });
+  }
+  if (author.status === 'banned' || author.status === 'muted') {
+    return res.status(403).json({ message: 'You was banned or muted' });
   }
   const post = new Post({
     _id: new mongoose.Types.ObjectId(),

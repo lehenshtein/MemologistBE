@@ -37,7 +37,7 @@ export const Schema = {
 
   comment: {
     create: Joi.object<IComment>({
-      text: Joi.string().required().min(20).max(2000),
+      text: Joi.string().required().min(1).max(2000),
       post: Joi.string().regex(idRegex).required()
     })
   },
