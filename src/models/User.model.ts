@@ -22,6 +22,7 @@ export interface IUser {
   createdAt: Date,
   createdPosts: string[],
   markedPosts: Map<string, marks>,
+  markedComments: Map<string, marks>,
   options: UserOptionsInterface
 }
 
@@ -41,6 +42,7 @@ const UserSchema: Schema = new Schema(
     statusTillDate: { type: Date, required: false },
     createdPosts: [{ type: Schema.Types.ObjectId, ref: 'Post' }],
     markedPosts: { type: Map, of: String, default: new Map() },
+    markedComments: { type: Map, of: String, default: new Map() },
     options: {
       selectedLocale: { type: String, required: true, default: 'ua' },
       locale: { type: String, required: false },

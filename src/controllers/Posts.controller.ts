@@ -1,15 +1,18 @@
 import { NextFunction, Request, Response } from 'express';
 import mongoose from 'mongoose';
 import Post, { IPostModel } from '../models/Posts.model';
-import User, { IUserModel } from '../models/User.model';
+import { IUser, IUserModel } from '../models/User.model';
 import { AuthRequest } from '../middleware/Authentication';
 import { marks } from '../models/marks.type';
 
 const createPost = (req: AuthRequest, res: Response, next: NextFunction) => {
   const { title, text, tags, imgUrl } = req.body;
-  const author = req.user?._id;
+  const author: IUser = req.user?._id;
   if (!author) {
     return res.status(401).json({ message: 'Please sign-in or sign-up' });
+  }
+  if (req.user?.status === 'banned' || req.user?.status === 'muted') {
+    return res.status(403).json({ message: 'You was banned or muted' });
   }
   const post = new Post({
     _id: new mongoose.Types.ObjectId(),
@@ -31,7 +34,7 @@ const readPost = async (req: AuthRequest, res: Response, next: NextFunction) => 
 
   try {
     const post: IPostModel | null = await Post.findById(postId)
-      .populate('author')// form ref author we get author obj and can get his name
+      .populate('author', '-_id name')// form ref author we get author obj and can get his name
       .select('-__v');// get rid of field
     if (!post) {
       return res.status(404).json({ message: 'not found' });

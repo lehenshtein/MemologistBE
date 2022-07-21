@@ -2,6 +2,7 @@ import Joi, { ObjectSchema } from 'joi';
 import { NextFunction, Request, Response } from 'express';
 import Logger from '../library/logger';
 import { IPost } from '../models/Posts.model';
+import { IComment } from '../models/Comment.model';
 
 export const ValidateSchema = (schema: ObjectSchema) => {
   return async (req: Request, res: Response, next: NextFunction) => {
@@ -31,6 +32,13 @@ export const Schema = {
       text: Joi.string().required().min(20).max(2000),
       tags: Joi.array().items(Joi.string()),
       imgUrl: Joi.string().optional().allow('', null).max(120)
+    })
+  },
+
+  comment: {
+    create: Joi.object<IComment>({
+      text: Joi.string().required().min(1).max(2000),
+      post: Joi.string().regex(idRegex).required()
     })
   },
 

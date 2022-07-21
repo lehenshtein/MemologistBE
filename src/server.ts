@@ -3,12 +3,11 @@ import mongoose from 'mongoose';
 import { config } from './config/config';
 import Logger from './library/logger';
 import http from 'http';
-import { AuthRoutes, PostsRoutes } from './routes/routes';
+import { AuthRoutes, CommentRoutes, PostsRoutes } from './routes/routes';
 import { addUserToRequest } from './middleware/Authentication';
 
 const router = express();
 // Connect to mongo
-console.log('conf', config.mongo.url);
 mongoose.connect(config.mongo.url, { retryWrites: true, w: 'majority' })
   .then(() => {
     Logger.log('connected to db');
@@ -62,6 +61,7 @@ function StartServer () {
   // Routes
   router.use('/auth', AuthRoutes);
   router.use('/posts', PostsRoutes);
+  router.use('/comment', CommentRoutes);
 
   // HealthCheck
   router.get('/ping', (req, res, next) => res.status(200).json({ message: 'ping successfull' }));
