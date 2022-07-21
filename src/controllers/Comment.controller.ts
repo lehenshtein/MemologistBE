@@ -1,9 +1,9 @@
 import { AuthRequest } from '../middleware/Authentication';
-import { NextFunction, Response, Request } from 'express';
+import { NextFunction, Response } from 'express';
 import Comment, { ICommentCreate, ICommentModel } from '../models/Comment.model';
 import mongoose from 'mongoose';
-import Post from '../models/Posts.model';
 import { marks } from '../models/marks.type';
+import { IUserModel } from '../models/User.model';
 
 const createComment = (req: AuthRequest, res: Response, next: NextFunction) => {
   const { text, post }: ICommentCreate = req.body;
@@ -26,18 +26,31 @@ const createComment = (req: AuthRequest, res: Response, next: NextFunction) => {
     .catch(err => res.status(500).json({ message: 'Server error', err }));
 };
 
-const getComments = async (req: Request, res: Response, next: NextFunction) => {
+const getComments = async (req: AuthRequest, res: Response, next: NextFunction) => {
+  const user: IUserModel | null | undefined = req.user;
   const { postId } = req.params;
   try {
     const comments: ICommentModel[] = await Comment.find({ post: postId }, '-__v')
       .sort('-createdAt')
       .populate('author', 'name -_id');
-    // comments.map(comment => comment.author.populate('name'));
+
+    if (user) {
+      comments.map((comment: ICommentModel) => {
+        return mapCommentsMarks(comment, user!);
+      });
+    }
     return res.status(200).json(comments);
   } catch (err) {
     return res.status(500).json({ message: 'Server error', err });
   }
 };
+
+// TODO: make it separate method for comments and posts
+function mapCommentsMarks (comment: ICommentModel, user: IUserModel): ICommentModel {
+  const mark: marks | undefined = user?.markedComments.get(comment._id);
+  mark ? comment.marked = mark : comment.marked = 'default';
+  return comment;
+}
 
 const getCommentsForUser = async (req: AuthRequest, res: Response, next: NextFunction) => {
   const user = req.user;
@@ -56,7 +69,6 @@ const getCommentsForUser = async (req: AuthRequest, res: Response, next: NextFun
   }
 };
 
-// TODO: finish marking comment
 const markComment = async (req: AuthRequest, res: Response, next: NextFunction) => {
   const { id, markType } = req.body;
   if (!req.user) {
@@ -89,4 +101,4 @@ const markComment = async (req: AuthRequest, res: Response, next: NextFunction) 
     .catch(err => res.status(500).json({ message: 'Server error', err }));
 };
 
-export default { createComment, getComments, getCommentsForUser };
+export default { createComment, getComments, getCommentsForUser, markComment };

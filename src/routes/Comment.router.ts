@@ -9,4 +9,6 @@ router.post('', [requireAuthentication as express.RequestHandler], ValidateSchem
 router.get('/:postId', controller.getComments);
 router.get('', controller.getCommentsForUser);
 
+router.post('/mark', [requireAuthentication], controller.markComment);
+
 export = router;

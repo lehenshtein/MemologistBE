@@ -8,7 +8,6 @@ import { addUserToRequest } from './middleware/Authentication';
 
 const router = express();
 // Connect to mongo
-console.log('conf', config.mongo.url);
 mongoose.connect(config.mongo.url, { retryWrites: true, w: 'majority' })
   .then(() => {
     Logger.log('connected to db');
