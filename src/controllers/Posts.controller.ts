@@ -11,7 +11,7 @@ const createPost = (req: AuthRequest, res: Response, next: NextFunction) => {
   if (!author) {
     return res.status(401).json({ message: 'Please sign-in or sign-up' });
   }
-  if (author.status === 'banned' || author.status === 'muted') {
+  if (req.user?.status === 'banned' || req.user?.status === 'muted') {
     return res.status(403).json({ message: 'You was banned or muted' });
   }
   const post = new Post({

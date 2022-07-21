@@ -4,22 +4,28 @@ import Comment, { ICommentCreate, ICommentModel } from '../models/Comment.model'
 import mongoose from 'mongoose';
 import { marks } from '../models/marks.type';
 import { IUserModel } from '../models/User.model';
+import Post, { IPostModel } from '../models/Posts.model';
 
-const createComment = (req: AuthRequest, res: Response, next: NextFunction) => {
+const createComment = async (req: AuthRequest, res: Response, next: NextFunction) => {
   const { text, post }: ICommentCreate = req.body;
   const author = req.user;
   if (!author) {
-    return res.status(401).json({ message: 'Please sign-in or sign-up' });
+    return;
   }
   if (author.status === 'banned' || author.status === 'muted') {
     return res.status(403).json({ message: 'You was banned or muted' });
   }
   const comment = new Comment({
-    _id: new mongoose.Types.ObjectId(),
     author,
     text,
     post
   });
+
+  const postDB: IPostModel | null = await Post.findById(post);
+  if (postDB) {
+    postDB.commentsAmount++;
+    await postDB.save();
+  }
 
   return comment.save()
     .then(comment => res.status(201).json(comment))
@@ -60,7 +66,6 @@ const getCommentsForUser = async (req: AuthRequest, res: Response, next: NextFun
   try {
     const comment: ICommentModel[] = await Comment.find({ author: user?._id })
       .sort('-createdAt')
-      .populate('author', 'name -_id')
       .select('-__v');
 
     return res.status(201).json(comment);
@@ -72,7 +77,7 @@ const getCommentsForUser = async (req: AuthRequest, res: Response, next: NextFun
 const markComment = async (req: AuthRequest, res: Response, next: NextFunction) => {
   const { id, markType } = req.body;
   if (!req.user) {
-    return res.status(401).json({ message: 'Please sign-in or sign-up' });
+    return;
   }
 
   const comment: ICommentModel | null = await Comment.findById(id);
@@ -85,7 +90,7 @@ const markComment = async (req: AuthRequest, res: Response, next: NextFunction) 
   }
   if (markType === 'disliked') {
     comment.score--;
-    comment.set('score', comment.score--);
+    comment.set('score', comment.score);
   }
   const recentCommentStatus: marks | undefined = req.user.markedComments.get(comment._id);
 
