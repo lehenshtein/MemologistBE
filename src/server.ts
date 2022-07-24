@@ -3,7 +3,7 @@ import mongoose from 'mongoose';
 import { config } from './config/config';
 import Logger from './library/logger';
 import http from 'http';
-import { AuthRoutes, CommentRoutes, PostsRoutes } from './routes/routes';
+import { AuthRoutes, CommentRoutes, PostsRoutes, UserRoutes } from './routes/routes';
 import { addUserToRequest } from './middleware/Authentication';
 
 const router = express();
@@ -46,7 +46,7 @@ function StartServer () {
       res.header('Access-Control-Allow-Origin', 'https://memologist.herokuapp.com');
     }
     res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
-
+    res.header('Access-Control-Expose-Headers', 'X-Page, X-Limit');
     if (req.method === 'OPTIONS') {
       res.header('Access-Control-Allow-Methods', 'PUT, POST, PATCH, DELETE, GET');
       return res.status(200).json({});
@@ -62,6 +62,7 @@ function StartServer () {
   router.use('/auth', AuthRoutes);
   router.use('/posts', PostsRoutes);
   router.use('/comment', CommentRoutes);
+  router.use('/user', UserRoutes);
 
   // HealthCheck
   router.get('/ping', (req, res, next) => res.status(200).json({ message: 'ping successfull' }));

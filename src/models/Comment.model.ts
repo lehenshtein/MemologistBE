@@ -1,6 +1,7 @@
 import { marks } from './marks.type';
 import mongoose, { Document, Schema } from 'mongoose';
 import { IPost } from './Posts.model';
+import { IUserModel } from './User.model';
 
 export interface ICommentCreate {
   text: string,
@@ -8,7 +9,7 @@ export interface ICommentCreate {
 }
 
 export interface IComment {
-  author: string,
+  author: Partial<IUserModel>,
   // authorName: string,
   text: string,
   score: number,

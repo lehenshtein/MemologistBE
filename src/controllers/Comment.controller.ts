@@ -1,9 +1,8 @@
 import { AuthRequest } from '../middleware/Authentication';
 import { NextFunction, Response } from 'express';
 import Comment, { ICommentCreate, ICommentModel } from '../models/Comment.model';
-import mongoose from 'mongoose';
 import { marks } from '../models/marks.type';
-import { IUserModel } from '../models/User.model';
+import User, { IUserModel } from '../models/User.model';
 import Post, { IPostModel } from '../models/Posts.model';
 
 const createComment = async (req: AuthRequest, res: Response, next: NextFunction) => {
@@ -84,13 +83,22 @@ const markComment = async (req: AuthRequest, res: Response, next: NextFunction) 
   if (!comment) {
     return res.status(404).json({ message: 'Comment not found' });
   }
+  const commentAuthorId = comment.author._id;
+  const author: IUserModel | null = await User.findById(commentAuthorId);
+
+  if (!author) {
+    return res.status(404).json({ message: 'Author of comment is not found or removed' });
+  }
+
   if (markType === 'liked') {
     comment.score++;
-    comment.set('score', comment.score);
+    author.rate += 0.5;
   }
+
   if (markType === 'disliked') {
     comment.score--;
-    comment.set('score', comment.score);
+    author.rate -= 0.5;
+    // comment.set('score', comment.score);
   }
   const recentCommentStatus: marks | undefined = req.user.markedComments.get(comment._id);
 
@@ -100,6 +108,7 @@ const markComment = async (req: AuthRequest, res: Response, next: NextFunction) 
     req.user.markedComments.set(comment._id, markType);
   }
 
+  await author.save();
   await req.user.save();
   return comment.save()
     .then(comment => res.status(201).json({ score: comment.score }))

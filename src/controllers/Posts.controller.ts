@@ -1,7 +1,7 @@
 import { NextFunction, Request, Response } from 'express';
 import mongoose from 'mongoose';
 import Post, { IPostModel } from '../models/Posts.model';
-import { IUser, IUserModel } from '../models/User.model';
+import User, { IUser, IUserModel } from '../models/User.model';
 import { AuthRequest } from '../middleware/Authentication';
 import { marks } from '../models/marks.type';
 
@@ -9,7 +9,7 @@ const createPost = (req: AuthRequest, res: Response, next: NextFunction) => {
   const { title, text, tags, imgUrl } = req.body;
   const author: IUser = req.user?._id;
   if (!author) {
-    return res.status(401).json({ message: 'Please sign-in or sign-up' });
+    return;
   }
   if (req.user?.status === 'banned' || req.user?.status === 'muted') {
     return res.status(403).json({ message: 'You was banned or muted' });
@@ -42,6 +42,8 @@ const readPost = async (req: AuthRequest, res: Response, next: NextFunction) => 
     if (user && post) {
       const mark: marks | undefined = user?.markedPosts.get(post._id);
       mark ? post.marked = mark : post.marked = 'default';
+      post.viewsAmount++;
+      await post.save();
     }
 
     return res.status(200).json(post);
@@ -58,10 +60,15 @@ const readPost = async (req: AuthRequest, res: Response, next: NextFunction) => 
 
 const readAll = async (req: AuthRequest, res: Response, next: NextFunction) => {
   const user: IUserModel | null | undefined = req.user;
+  const page = req.query.page || 1;
+  const limit = req.query.limit || 10;
+  console.log(req.query);
 
   try {
     const posts: IPostModel[] = await Post.find()
       .sort('-createdAt')
+      .limit(+limit)
+      .skip((+page - 1) * +limit)
       .populate('author', 'name -_id')
       .select('-__v'); // get rid of field
 
@@ -70,6 +77,8 @@ const readAll = async (req: AuthRequest, res: Response, next: NextFunction) => {
         return mapPostsMarks(post, user!);
       });
     }
+    res.header('X-Page', page.toString());
+    res.header('X-Limit', limit.toString());
 
     return res.status(200).json(posts);
   } catch (err) {
@@ -124,17 +133,27 @@ const markPost = async (req: AuthRequest, res: Response, next: NextFunction) => 
     return res.status(401).json({ message: 'Please sign-in or sign-up' });
   }
 
-  const post = await Post.findById(id);
+  const post: IPostModel | null = await Post.findById(id).populate('author', '_id');
+
   if (!post) {
     return res.status(404).json({ message: 'Post not found' });
   }
+
+  const postAuthorId = post.author._id;
+  const author: IUserModel | null = await User.findById(postAuthorId);
+
+  if (!author) {
+    return res.status(404).json({ message: 'Author of post is not found or removed' });
+  }
+
   if (markType === 'liked') {
     post.score++;
-    post.set('score', post.score);
+    author.rate++;
   }
   if (markType === 'disliked') {
     post.score--;
-    post.set('score', post.score--);
+    author.rate--;
+    // post.set('score', post.score--);
   }
   const recentPostStatus: marks | undefined = req.user.markedPosts.get(post._id);
 
@@ -145,6 +164,8 @@ const markPost = async (req: AuthRequest, res: Response, next: NextFunction) => 
   }
 
   await req.user.save();
+  await author.save();
+
   return post.save()
     .then(post => res.status(201).json({ score: post.score }))
     .catch(err => res.status(500).json({ message: 'Server error', err }));

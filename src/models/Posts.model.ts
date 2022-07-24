@@ -1,12 +1,13 @@
 import mongoose, { Document, Schema } from 'mongoose';
 import { marks } from './marks.type';
+import { IUserModel } from './User.model';
 
 export interface IPost {
   title: string;
   text: string;
   tags: string[];
   imgUrl: string;
-  author: string;
+  author: Partial<IUserModel>;
   score: number,
   viewsAmount: number,
   commentsAmount: number,
