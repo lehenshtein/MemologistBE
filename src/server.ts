@@ -22,7 +22,7 @@ mongoose.connect(config.mongo.url, { retryWrites: true, w: 'majority' })
 // Start server only if/after mongo connect
 function StartServer () {
   setInterval(function () {
-    http.get('https://memologist-be.herokuapp.com/');
+    http.get('http://memologist-be.herokuapp.com/');
   }, 600000); // every 10 minutes (600000)
   checkHotPosts();
 
