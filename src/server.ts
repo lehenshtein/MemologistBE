@@ -5,6 +5,7 @@ import Logger from './library/logger';
 import http from 'http';
 import { AuthRoutes, CommentRoutes, PostsRoutes, UserRoutes } from './routes/routes';
 import { addUserToRequest } from './middleware/Authentication';
+import { checkHotPosts } from './helpers/HotPostsCron';
 
 const router = express();
 // Connect to mongo
@@ -20,6 +21,8 @@ mongoose.connect(config.mongo.url, { retryWrites: true, w: 'majority' })
 
 // Start server only if/after mongo connect
 function StartServer () {
+  checkHotPosts();
+
   router.use((req, res, next) => {
     // Log the request
     Logger.info(`Incoming -> method: [${req.method}] - Url: [${req.url}] - IP: [${req.socket.remoteAddress}]`);

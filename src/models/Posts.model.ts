@@ -11,7 +11,9 @@ export interface IPost {
   score: number,
   viewsAmount: number,
   commentsAmount: number,
-  marked?: marks
+  marked?: marks,
+  hotPoints: number,
+  lastHotCheckDate: Date
 }
 
 export interface IPostModel extends IPost, Document {}
@@ -25,7 +27,9 @@ const PostSchema: Schema = new Schema({
   score: { type: Number, required: false, default: 0 },
   viewsAmount: { type: Number, required: false, default: 0 },
   commentsAmount: { type: Number, required: false, default: 0 },
-  marked: { type: String, required: false, default: 'default', ref: 'User' }
+  marked: { type: String, required: false, default: 'default', ref: 'User' },
+  hotPoints: { type: Number, required: true, default: 0 },
+  lastHotCheckDate: { type: Date, required: true, default: new Date() }
 }, { timestamps: true });
 
 export default mongoose.model<IPostModel>('Post', PostSchema);

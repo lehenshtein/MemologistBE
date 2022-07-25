@@ -90,17 +90,20 @@ const markComment = async (req: AuthRequest, res: Response, next: NextFunction) 
     return res.status(404).json({ message: 'Author of comment is not found or removed' });
   }
 
-  if (markType === 'liked') {
+  const recentCommentStatus: marks | undefined = await req.user.markedComments.get(comment._id);
+
+  if ((markType === 'liked' && recentCommentStatus !== 'liked') ||
+    (markType === 'disliked' && recentCommentStatus === 'disliked')) {
     comment.score++;
     author.rate += 0.5;
   }
 
-  if (markType === 'disliked') {
+  if ((markType === 'disliked' && recentCommentStatus !== 'disliked') ||
+    (markType === 'liked' && recentCommentStatus === 'liked')) {
     comment.score--;
     author.rate -= 0.5;
     // comment.set('score', comment.score);
   }
-  const recentCommentStatus: marks | undefined = req.user.markedComments.get(comment._id);
 
   if (recentCommentStatus) {
     req.user.markedComments.delete(comment._id);

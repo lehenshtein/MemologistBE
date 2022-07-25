@@ -40,10 +40,11 @@ const readPost = async (req: AuthRequest, res: Response, next: NextFunction) => 
       return res.status(404).json({ message: 'not found' });
     }
     if (user && post) {
-      const mark: marks | undefined = user?.markedPosts.get(post._id);
-      mark ? post.marked = mark : post.marked = 'default';
       post.viewsAmount++;
       await post.save();
+
+      const mark: marks | undefined = user?.markedPosts.get(post._id);
+      mark ? post.marked = mark : post.marked = 'default';
     }
 
     return res.status(200).json(post);
@@ -62,7 +63,6 @@ const readAll = async (req: AuthRequest, res: Response, next: NextFunction) => {
   const user: IUserModel | null | undefined = req.user;
   const page = req.query.page || 1;
   const limit = req.query.limit || 10;
-  console.log(req.query);
 
   try {
     const posts: IPostModel[] = await Post.find()
@@ -146,16 +146,19 @@ const markPost = async (req: AuthRequest, res: Response, next: NextFunction) => 
     return res.status(404).json({ message: 'Author of post is not found or removed' });
   }
 
-  if (markType === 'liked') {
+  const recentPostStatus: marks | undefined = await req.user.markedPosts.get(post._id);
+
+  if ((markType === 'liked' && recentPostStatus !== 'liked') ||
+      (markType === 'disliked' && recentPostStatus === 'disliked')) {
     post.score++;
     author.rate++;
   }
-  if (markType === 'disliked') {
+  if ((markType === 'disliked' && recentPostStatus !== 'disliked') ||
+        (markType === 'liked' && recentPostStatus === 'liked')) {
     post.score--;
     author.rate--;
     // post.set('score', post.score--);
   }
-  const recentPostStatus: marks | undefined = req.user.markedPosts.get(post._id);
 
   if (recentPostStatus) {
     req.user.markedPosts.delete(post._id);
