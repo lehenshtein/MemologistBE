@@ -62,7 +62,7 @@ const createToken = (name: string, email: string) => {
   return jwt.sign(
     { name, email },
     process.env.JWT_SIGN_KEY || '123',
-    { expiresIn: '2 days' }
+    { expiresIn: '7 days' }
   );
 };
 

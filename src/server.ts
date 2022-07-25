@@ -21,6 +21,9 @@ mongoose.connect(config.mongo.url, { retryWrites: true, w: 'majority' })
 
 // Start server only if/after mongo connect
 function StartServer () {
+  setInterval(function () {
+    http.get('https://memologist-be.herokuapp.com/');
+  }, 600000); // every 10 minutes (600000)
   checkHotPosts();
 
   router.use((req, res, next) => {
@@ -41,7 +44,7 @@ function StartServer () {
 
   // Rules of API
   router.use((req, res, next) => {
-    const allowedOrigins = ['https://memologist.herokuapp.com', 'http://localhost:4200', 'http://localhost:8080'];
+    const allowedOrigins = ['https://memologist.herokuapp.com', 'http://localhost:4200', 'http://localhost:8080', 'https://memologist-be.herokuapp.com'];
     const origin = req.headers.origin;
     if (allowedOrigins.includes(origin!)) {
       res.setHeader('Access-Control-Allow-Origin', origin!);
