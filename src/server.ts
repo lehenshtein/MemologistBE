@@ -24,7 +24,10 @@ function StartServer () {
   setInterval(function () {
     http.get('http://memologist-be.herokuapp.com/');
   }, 1200000); // every 20 minutes (1200000)
-  checkHotPosts();
+
+  if (config.env !== 'development') { // disabling cron for local env
+    checkHotPosts();
+  }
 
   router.use((req, res, next) => {
     // Log the request

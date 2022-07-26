@@ -5,4 +5,5 @@
    MONGO_USERNAME = "<username>"
    MONGO_PASSWORD = "<password>"
    PORT = "3000" //optional
+   NODE_ENV = 'development'
 3. Run - npm run watch in the terminal
