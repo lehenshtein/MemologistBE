@@ -4,6 +4,7 @@ import Post, { IPostModel } from '../models/Posts.model';
 import User, { IUser, IUserModel } from '../models/User.model';
 import { AuthRequest } from '../middleware/Authentication';
 import { marks } from '../models/marks.type';
+import { sort } from '../models/postsSort.type';
 
 const createPost = (req: AuthRequest, res: Response, next: NextFunction) => {
   const { title, text, tags, imgUrl } = req.body;
@@ -64,10 +65,10 @@ const readAll = async (req: AuthRequest, res: Response, next: NextFunction) => {
   const user: IUserModel | null | undefined = req.user;
   const page = req.query.page || 1;
   const limit = req.query.limit || 10;
+  const sort: sort = req.query.sort as sort || 'hot';
 
   try {
-    const posts: IPostModel[] = await Post.find()
-      .sort('-createdAt')
+    const posts: IPostModel[] = await sortPosts(sort)
       .limit(+limit)
       .skip((+page - 1) * +limit)
       .populate('author', 'name -_id')
@@ -85,14 +86,23 @@ const readAll = async (req: AuthRequest, res: Response, next: NextFunction) => {
   } catch (err) {
     res.status(500).json({ message: 'Server error', err });
   }
-
-  // return Post.find()
-  //   .sort('-createdAt')
-  //   .populate('author')
-  //   .select('-__v')// get rid of field
-  //   .then(posts => res.status(200).json(posts))
-  //   .catch(err => res.status(500).json({ message: 'Server error', err }));
 };
+
+function sortPosts (sort: sort) {
+  if (sort === 'new') {
+    return Post.find()
+      .sort('-createdAt');
+  }
+  if (sort === 'best') {
+    return Post.find()
+      .sort('-score');
+  }
+  const lastDaysToTakePosts = 7;
+  const d = new Date();
+  d.setUTCDate(d.getUTCDate() - lastDaysToTakePosts);
+  return Post.find({ createdAt: { $gt: d } })
+    .sort('-hotPoints');
+}
 
 function mapPostsMarks (post: IPostModel, user: IUserModel): IPostModel {
   const mark: marks | undefined = user?.markedPosts.get(post._id);
