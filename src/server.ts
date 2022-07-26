@@ -23,7 +23,7 @@ mongoose.connect(config.mongo.url, { retryWrites: true, w: 'majority' })
 function StartServer () {
   setInterval(function () {
     http.get('http://memologist-be.herokuapp.com/');
-  }, 600000); // every 10 minutes (600000)
+  }, 1200000); // every 20 minutes (1200000)
   checkHotPosts();
 
   router.use((req, res, next) => {

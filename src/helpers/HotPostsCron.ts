@@ -35,27 +35,32 @@ async function getPosts () {
 
 function updateHotPoints (post: IPost) {
   const hotPointsToStop = -20;
-  const viewHotPoints = post.viewsAmount / 100;
-  const scoreHotPoints = post.score;
-  const commentHotPoints = post.commentsAmount * 10;
-  const newHotPoints = viewHotPoints + scoreHotPoints + commentHotPoints;
+  // const viewHotPoints = post.viewsAmount / 100;
+  // const scoreHotPoints = post.score;
+  // const commentHotPoints = post.commentsAmount * 10;
+  // const newHotPoints = viewHotPoints + scoreHotPoints + commentHotPoints;
+
+  // create previousCheckHotPoint
+  // if recent HP < prevHP lower HP, set prevHP as recent
 
   // post.hotPoints = newHotPoints;
   if (post.hotPoints <= hotPointsToStop) {
     return post;
   }
-  if (newHotPoints > post.hotPoints) {
-    post.hotPoints = newHotPoints;
-    post.lastHotCheckDate = new Date();
+  if (post.hotPoints > post.hotPointsCheck.lastHotCheckPoints) {
+    post.hotPointsCheck.lastHotCheckPoints = post.hotPoints;
+    post.hotPointsCheck.lastHotCheckDate = new Date().getTime();
     return post;
   }
 
   const percentToDecreaseHotPerHour = 2;
   const percentToDecreaseHotPerMin: number = +(percentToDecreaseHotPerHour / 60).toFixed(3);
   const minutesFromLastCheck: number = Math.round(Math.abs(
-    new Date().getTime() / 1000 - post.lastHotCheckDate.getTime() / 1000)) / 60;
+    new Date().getTime() / 1000 - post.hotPointsCheck.lastHotCheckDate / 1000)) / 60;
   const pointsAmountToDecrease = minutesFromLastCheck * percentToDecreaseHotPerMin;
 
-  post.hotPoints = +(newHotPoints - pointsAmountToDecrease).toFixed(2);
+  post.hotPoints = +(post.hotPoints - pointsAmountToDecrease).toFixed(2);
+  post.hotPointsCheck.lastHotCheckPoints = post.hotPoints;
+  post.hotPointsCheck.lastHotCheckDate = new Date().getTime();
   return post;
 }

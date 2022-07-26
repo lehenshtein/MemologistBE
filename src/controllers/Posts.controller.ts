@@ -41,6 +41,7 @@ const readPost = async (req: AuthRequest, res: Response, next: NextFunction) => 
     }
     if (user && post) {
       post.viewsAmount++;
+      post.hotPoints += 0.01;
       await post.save();
 
       const mark: marks | undefined = user?.markedPosts.get(post._id);
@@ -151,11 +152,13 @@ const markPost = async (req: AuthRequest, res: Response, next: NextFunction) => 
   if ((markType === 'liked' && recentPostStatus !== 'liked') ||
       (markType === 'disliked' && recentPostStatus === 'disliked')) {
     post.score++;
+    post.hotPoints++;
     author.rate++;
   }
   if ((markType === 'disliked' && recentPostStatus !== 'disliked') ||
         (markType === 'liked' && recentPostStatus === 'liked')) {
     post.score--;
+    post.hotPoints--;
     author.rate--;
     // post.set('score', post.score--);
   }
