@@ -23,7 +23,7 @@ const createComment = async (req: AuthRequest, res: Response, next: NextFunction
   const postDB: IPostModel | null = await Post.findById(post);
   if (postDB) {
     postDB.commentsAmount++;
-    if (postDB.author._id !== author._id) {
+    if (!postDB.author._id.equals(author._id)) {
       postDB.hotPoints += 10;
     }
     await postDB.save();
