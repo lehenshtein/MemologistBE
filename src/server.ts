@@ -59,7 +59,9 @@ function StartServer () {
     if (allowedOrigins.includes(origin!)) {
       res.setHeader('Access-Control-Allow-Origin', origin!);
     } else {
-      res.header('Access-Control-Allow-Origin', 'https://memologist.herokuapp.com');
+      config.env === 'prod'
+        ? res.header('Access-Control-Allow-Origin', 'https://memologist-prod.herokuapp.com')
+        : res.header('Access-Control-Allow-Origin', 'https://memologist.herokuapp.com');
     }
     res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
     res.header('Access-Control-Expose-Headers', 'X-Page, X-Limit');
