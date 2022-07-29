@@ -53,7 +53,7 @@ function StartServer () {
   router.use((req, res, next) => {
     let allowedOrigins = ['https://memologist.herokuapp.com', 'http://localhost:4200', 'http://localhost:8080', 'https://memologist-be.herokuapp.com'];
     if (config.env === 'prod') {
-      allowedOrigins = ['https://memologist-prod.herokuapp.com'];
+      allowedOrigins = ['https://memologist-prod.herokuapp.com', 'https://memologist-prod-be.herokuapp.com'];
     }
     const origin = req.headers.origin;
     if (allowedOrigins.includes(origin!)) {
