@@ -25,7 +25,7 @@ function StartServer () {
     http.get('http://memologist-be.herokuapp.com/');
   }, 1200000); // every 20 minutes (1200000)
 
-  if (config.env !== 'development') { // disabling cron for local env
+  if (config.env !== 'local') { // disabling cron for local env
     checkHotPosts();
   }
 
