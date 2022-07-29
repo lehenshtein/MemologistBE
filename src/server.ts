@@ -20,9 +20,13 @@ mongoose.connect(config.mongo.url, { retryWrites: true, w: 'majority' })
   });
 
 // Start server only if/after mongo connect
+let selfUrl = 'http://memologist-be.herokuapp.com/';
+if (config.env === 'prod') {
+  selfUrl = 'http://memologist-prod-be.herokuapp.com/';
+}
 function StartServer () {
   setInterval(function () {
-    http.get('http://memologist-be.herokuapp.com/');
+    http.get(selfUrl);
   }, 1200000); // every 20 minutes (1200000)
 
   if (config.env !== 'local') { // disabling cron for local env
@@ -47,7 +51,10 @@ function StartServer () {
 
   // Rules of API
   router.use((req, res, next) => {
-    const allowedOrigins = ['https://memologist.herokuapp.com', 'http://localhost:4200', 'http://localhost:8080', 'https://memologist-be.herokuapp.com'];
+    let allowedOrigins = ['https://memologist.herokuapp.com', 'http://localhost:4200', 'http://localhost:8080', 'https://memologist-be.herokuapp.com'];
+    if (config.env === 'prod') {
+      allowedOrigins = ['https://memologist-prod.herokuapp.com'];
+    }
     const origin = req.headers.origin;
     if (allowedOrigins.includes(origin!)) {
       res.setHeader('Access-Control-Allow-Origin', origin!);
