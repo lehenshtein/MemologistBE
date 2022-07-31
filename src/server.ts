@@ -53,7 +53,7 @@ function StartServer () {
   router.use((req, res, next) => {
     let allowedOrigins = ['https://memologist.herokuapp.com', 'http://localhost:4200', 'http://localhost:8080', 'https://memologist-be.herokuapp.com'];
     if (config.env === 'prod') {
-      allowedOrigins = ['https://memologist-prod.herokuapp.com', 'https://memologist-prod-be.herokuapp.com'];
+      allowedOrigins = ['http://www.memologist.com.ua', 'https://www.memologist.com.ua', 'https://memologist-prod.herokuapp.com', 'https://memologist-prod-be.herokuapp.com'];
     }
     const origin = req.headers.origin;
     if (allowedOrigins.includes(origin!)) {
@@ -63,6 +63,7 @@ function StartServer () {
         ? res.header('Access-Control-Allow-Origin', 'https://memologist-prod.herokuapp.com')
         : res.header('Access-Control-Allow-Origin', 'https://memologist.herokuapp.com');
     }
+
     res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
     res.header('Access-Control-Expose-Headers', 'X-Page, X-Limit');
     if (req.method === 'OPTIONS') {
