@@ -34,7 +34,7 @@ const PostSchema: Schema = new Schema({
   hotPoints: { type: Number, required: true, default: 0 },
   hotPointsCheck: {
     lastHotCheckDate: { type: Number, required: true, default: new Date().getTime() },
-    hotPoints: { type: Number, required: true, default: 0 }
+    lastHotCheckPoints: { type: Number, required: true, default: 0 }
   }
 
 }, { timestamps: true });
