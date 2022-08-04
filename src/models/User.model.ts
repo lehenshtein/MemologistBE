@@ -23,6 +23,9 @@ export interface IUser {
   createdPosts: string[],
   markedPosts: Map<string, marks>,
   markedComments: Map<string, marks>,
+  verified: boolean,
+  verificationKey: string,
+  verificationDate: Date,
   options: UserOptionsInterface
 }
 
@@ -43,6 +46,9 @@ const UserSchema: Schema = new Schema(
     createdPosts: [{ type: Schema.Types.ObjectId, ref: 'Post' }],
     markedPosts: { type: Map, of: String, default: new Map() },
     markedComments: { type: Map, of: String, default: new Map() },
+    verified: { type: Boolean, required: true, default: false },
+    verificationKey: { type: String, required: true },
+    verificationDate: { type: Date, required: true, default: new Date() },
     options: {
       selectedLocale: { type: String, required: true, default: 'ua' },
       locale: { type: String, required: false },
