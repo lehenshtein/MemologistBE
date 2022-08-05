@@ -36,7 +36,8 @@ const readPost = async (req: AuthRequest, res: Response, next: NextFunction) => 
   try {
     const post: IPostModel | null = await Post.findById(postId)
       .populate('author', '-_id name')// form ref author we get author obj and can get his name
-      .select('-__v');// get rid of field
+      .select('-__v -hotPointsCheck');// get rid of field
+    // TODO: get rid of hotPoints field
     if (!post) {
       return res.status(404).json({ message: 'not found' });
     }
@@ -72,7 +73,7 @@ const readAll = async (req: AuthRequest, res: Response, next: NextFunction) => {
       .limit(+limit)
       .skip((+page - 1) * +limit)
       .populate('author', 'name -_id')
-      .select('-__v'); // get rid of field
+      .select('-__v -hotPoints -hotPointsCheck'); // get rid of field
 
     if (user) {
       posts.map((post: IPostModel) => {

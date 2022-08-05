@@ -8,7 +8,7 @@ const getUser = async (req: AuthRequest, res: Response, next: NextFunction) => {
   }
 
   try {
-    const user = await User.findById(req.user._id, '-_id');
+    const user = await User.findById(req.user._id, '-_id -verificationKey -email');
     if (!user) {
       return res.status(404).json({ message: 'not found' });
     }
