@@ -8,8 +8,16 @@ const CLUSTER_NAME = process.env.CLUSTER_NAME || '';
 const MONGO_URL = NODE_ENV === 'prod'
   ? `mongodb+srv://${MONGO_USERNAME}:${MONGO_PASSWORD}@cluster0.${CLUSTER_NAME}.mongodb.net`
   : `mongodb+srv://${MONGO_USERNAME}:${MONGO_PASSWORD}@cluster0.i2yk4qd.mongodb.net/`;
+const EMAIL_LOGIN = process.env.EMAIL_LOGIN || '';
+const EMAIL_PASSWORD = process.env.EMAIL_PASSWORD || '';
 
 const PORT = process.env.PORT ? Number(process.env.PORT) : 3000;
+
+const frontProdUrl = 'https://memologist.com.ua/';
+const frontStageUrl = 'https://memologist.herokuapp.com/';
+const frontLocalUrl = 'http://localhost:4200/';
+
+const frontUrl = NODE_ENV === 'local' ? frontLocalUrl : NODE_ENV === 'dev' ? frontStageUrl : frontProdUrl;
 
 export const config = {
   mongo: {
@@ -18,5 +26,10 @@ export const config = {
   server: {
     port: PORT
   },
-  env: NODE_ENV
+  env: NODE_ENV,
+  email: {
+    login: EMAIL_LOGIN,
+    password: EMAIL_PASSWORD
+  },
+  frontUrl
 };
