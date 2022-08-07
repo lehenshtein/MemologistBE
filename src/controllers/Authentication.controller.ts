@@ -80,6 +80,32 @@ const verify = async (req: AuthRequest, res: Response, next: NextFunction) => {
   }
 };
 
+const resendMail = async (req: AuthRequest, res: Response, next: NextFunction) => {
+  const user: IUserModel | null | undefined = req.user;
+
+  if (user?.verified) {
+    return res.status(403).json({ message: 'Already verified' });
+  }
+
+  if (user) {
+    const verificationKey = generateVerificationKey();
+    const emailData = createEmailData(verificationKey);
+    const currentDate: Date = new Date();
+    const nextEmailDate: Date = new Date(user.verificationDate.setHours(user.verificationDate.getHours() + 1));
+    if (nextEmailDate > currentDate) {
+      return res.status(403).json({ message: 'Please wait till send email again' });
+    }
+    user.verificationKey = verificationKey;
+    user.verificationDate = currentDate;
+    return user.save()
+      .then(user => {
+        sendMail(user.email, emailData);
+        return res.status(201).json(user);
+      })
+      .catch(err => res.status(500).json({ message: 'Server error', err }));
+  }
+};
+
 const generateSalt = () => {
   return Crypto.randomBytes(32).toString('base64');
 };
@@ -126,4 +152,4 @@ const sendMail = async (receiver: string, email: { subject: string, text: string
   }
 };
 
-export default { register, login, verify };
+export default { register, login, verify, resendMail };
