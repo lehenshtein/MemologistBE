@@ -18,21 +18,23 @@ export const ValidateSchema = (schema: ObjectSchema) => {
   };
 };
 const idRegex = /^[0-9a-fA=F]{24}$/;
+const imgRegex = /^(ftp|http|https):\/\/.+\.(jpg|jpeg|png|webp|avif|gif|svg)/i;
 
 export const Schema = {
   post: {
     create: Joi.object<IPost>({
-      title: Joi.string().required().min(8).max(30),
-      text: Joi.string().required().min(20).max(2000),
+      title: Joi.string().required().min(5).max(30),
+      text: Joi.string().empty('').min(10).max(2000),
       tags: Joi.array().items(Joi.string()),
-      imgUrl: Joi.string().optional().allow('', null).max(120)
-    }),
+      imgUrl: Joi.string().regex(imgRegex).empty(null).max(240)
+    }).xor('text', 'imgUrl'),
+
     update: Joi.object<IPost>({
-      title: Joi.string().required().min(8).max(30),
-      text: Joi.string().required().min(20).max(2000),
+      title: Joi.string().required().min(5).max(30),
+      text: Joi.string().empty('').min(10).max(2000),
       tags: Joi.array().items(Joi.string()),
-      imgUrl: Joi.string().optional().allow('', null).max(120)
-    })
+      imgUrl: Joi.string().regex(imgRegex).empty(null).max(240)
+    }).xor('text', 'imgUrl')
   },
 
   comment: {

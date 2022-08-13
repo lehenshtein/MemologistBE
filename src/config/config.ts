@@ -13,8 +13,8 @@ const EMAIL_PASSWORD = process.env.EMAIL_PASSWORD || '';
 
 const PORT = process.env.PORT ? Number(process.env.PORT) : 3000;
 
-const frontProdUrl = 'https://memologist.com.ua/';
-const frontStageUrl = 'https://memologist.herokuapp.com/';
+const frontProdUrl = 'http://memologist.com.ua/';
+const frontStageUrl = 'http://memologist.herokuapp.com/';
 const frontLocalUrl = 'http://localhost:4200/';
 
 const frontUrl = NODE_ENV === 'local' ? frontLocalUrl : NODE_ENV === 'dev' ? frontStageUrl : frontProdUrl;

@@ -23,7 +23,7 @@ export interface IPostModel extends IPost, Document {}
 
 const PostSchema: Schema = new Schema({
   title: { type: String, required: true },
-  text: { type: String, required: true },
+  text: { type: String, required: false },
   tags: { type: [String], required: false },
   imgUrl: { type: String, required: false },
   author: { type: Schema.Types.ObjectId, required: true, ref: 'User' },
