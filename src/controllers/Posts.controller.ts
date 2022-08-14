@@ -85,7 +85,50 @@ const readAll = async (req: AuthRequest, res: Response, next: NextFunction) => {
 
     return res.status(200).json(posts);
   } catch (err) {
-    res.status(500).json({ message: 'Server error', err });
+    return res.status(500).json({ message: 'Server error', err });
+  }
+};
+
+const getPostsForUser = async (req: AuthRequest, res: Response, next: NextFunction) => {
+  const user: IUserModel | null | undefined = req.user;
+  const { name } = req.params;
+  const page = req.query.page || 1;
+  const limit = req.query.limit || 10;
+  const sort: sort = 'new';
+
+  let authorId;
+  if (name && name !== 'undefined') {
+    try {
+      authorId = await User.findOne({ name }, '_id');
+      if (!authorId) {
+        return res.status(404).json({ message: 'Author not found' });
+      }
+    } catch (err) {
+      return res.status(500).json({ message: 'Server error', err });
+    }
+  } else {
+    return res.status(400).json({ message: 'Invalid username' });
+  }
+
+  try {
+    const posts: IPostModel[] = await Post.find({ author: authorId })
+      .sort(sort)
+      .limit(+limit)
+      .skip((+page - 1) * +limit)
+      .populate('author', 'name -_id')
+      .select('-__v -hotPoints -hotPointsCheck'); // get rid of field
+
+    if (user) {
+      posts.map((post: IPostModel) => {
+        return mapPostsMarks(post, user!);
+      });
+    }
+    res.header('X-Page', page.toString());
+    res.header('X-Limit', limit.toString());
+
+    return res.status(200).json(posts);
+  } catch (err) {
+    return res.status(500).json({ message: 'Server error', err });
   }
 };
 
@@ -123,7 +166,7 @@ const updatePost = (req: Request, res: Response, next: NextFunction) => {
           .then(post => res.status(201).json(post))
           .catch(err => res.status(500).json({ message: 'Server error', err }));
       } else {
-        res.status(404).json({ message: 'not found' });
+        return res.status(404).json({ message: 'not found' });
       }
     })
     .catch(err => res.status(500).json({ message: 'Server error', err }));
@@ -188,4 +231,4 @@ const markPost = async (req: AuthRequest, res: Response, next: NextFunction) => 
     .catch(err => res.status(500).json({ message: 'Server error', err }));
 };
 
-export default { createPost, readPost, readAll, updatePost, deletePost, markPost };
+export default { createPost, readPost, readAll, updatePost, deletePost, markPost, getPostsForUser };

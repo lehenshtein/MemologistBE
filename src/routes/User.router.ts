@@ -5,5 +5,6 @@ import express from 'express';
 const router = express.Router();
 
 router.get('', [requireAuthentication as express.RequestHandler], controller.getUser);
+router.get('/:name', controller.getUserByName);
 
 export = router;
