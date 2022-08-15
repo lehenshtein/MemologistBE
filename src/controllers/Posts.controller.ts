@@ -129,8 +129,13 @@ const updatePost = (req: Request, res: Response, next: NextFunction) => {
     .catch(err => res.status(500).json({ message: 'Server error', err }));
 };
 
-const deletePost = (req: Request, res: Response, next: NextFunction) => {
+const deletePost = (req: AuthRequest, res: Response, next: NextFunction) => {
   const { postId } = req.params;
+  const user = req.user;
+
+  if (!user || user.role !== 'superAdmin') {
+    return res.status(400).json({ message: 'Not enough permissions' });
+  }
 
   return Post.findByIdAndDelete(postId)
     .then(post => post
