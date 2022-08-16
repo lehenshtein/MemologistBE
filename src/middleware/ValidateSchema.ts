@@ -23,18 +23,18 @@ const imgRegex = /^(ftp|http|https):\/\/.+\.(jpg|jpeg|png|webp|avif|gif|svg)/i;
 export const Schema = {
   post: {
     create: Joi.object<IPost>({
-      title: Joi.string().required().min(5).max(30),
+      title: Joi.string().required().min(5).max(50),
       text: Joi.string().empty('').min(10).max(2000),
       tags: Joi.array().items(Joi.string()),
-      imgUrl: Joi.string().regex(imgRegex).empty(null).max(240)
-    }).xor('text', 'imgUrl'),
+      imgUrl: Joi.string().empty(null).regex(imgRegex).max(240)
+    }).or('text', 'imgUrl'),
 
     update: Joi.object<IPost>({
-      title: Joi.string().required().min(5).max(30),
+      title: Joi.string().required().min(5).max(50),
       text: Joi.string().empty('').min(10).max(2000),
       tags: Joi.array().items(Joi.string()),
-      imgUrl: Joi.string().regex(imgRegex).empty(null).max(240)
-    }).xor('text', 'imgUrl')
+      imgUrl: Joi.string().empty(null).regex(imgRegex).max(240)
+    }).or('text', 'imgUrl')
   },
 
   comment: {
