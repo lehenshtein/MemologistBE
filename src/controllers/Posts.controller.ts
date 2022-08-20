@@ -9,7 +9,7 @@ import { AuthRequest } from '../middleware/Authentication';
 import { marks } from '../models/marks.type';
 import { sort } from '../models/postsSort.type';
 
-type fileType = {[fieldname: string]: Express.Multer.File[] } | Express.Multer.File[] | undefined;
+type fileType = Express.Multer.File[] | undefined;
 
 const IMAGEKIT_ID = process.env.IMAGEKIT_ID || '';
 const IMAGEKIT_URL = `https://ik.imagekit.io/${IMAGEKIT_ID}`;
@@ -121,11 +121,11 @@ const createPost = async (req: AuthRequest, res: Response, next: NextFunction) =
   if (!contentValidation.result) {
     return res.status(401).json({ message: contentValidation.message });
   }
-  const fileValidation = await validateFiles(req.files);
+  const fileValidation = await validateFiles(req.files as fileType);
   if (!fileValidation.result) {
     return res.status(401).json({ message: fileValidation.message });
   }
-  const fileUpload = await processImages(content, req.files);
+  const fileUpload = await processImages(content, req.files as fileType);
   if (!fileUpload.result) {
     return res.status(401).json({ message: fileUpload.message });
   }
@@ -159,11 +159,11 @@ const updatePost = async (req: AuthRequest, res: Response, next: NextFunction) =
         if (!contentValidation.result) {
           return res.status(401).json({ message: contentValidation.message });
         }
-        const fileValidation = await validateFiles(req.files);
+        const fileValidation = await validateFiles(req.files as fileType);
         if (!fileValidation.result) {
           return res.status(401).json({ message: fileValidation.message });
         }
-        const fileUpload = await processImages(req.body.content, req.files);
+        const fileUpload = await processImages(req.body.content, req.files as fileType);
         if (!fileUpload.result) {
           return res.status(401).json({ message: fileUpload.message });
         }
