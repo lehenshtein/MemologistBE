@@ -83,7 +83,7 @@ const processImages = async (content: Array<{type: string, text: string, imgUrl:
   return { result: true, message: '', content: resultContent };
 };
 
-const uploadFile = async (item: {type: string, text: string, imgUrl: string, imgName: string}, fileMap: Map<string, fileType>) => {
+const uploadFile = async (item: {type: string, text: string, imgUrl: string, imgName: string}, fileMap: Map<string, Express.Multer.File>) => {
   const postData = {
     file: '',
     fileName: Crypto.randomBytes(32).toString('base64'),
@@ -97,7 +97,7 @@ const uploadFile = async (item: {type: string, text: string, imgUrl: string, img
     if (!file) {
       return { result: false, message: `File ${item.imgName} not found in request`, item: null };
     }
-    postData.file = file.buffer;
+    postData.file = file.buffer.toString();
   }
 
   try {
