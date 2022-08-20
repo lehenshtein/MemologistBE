@@ -21,11 +21,19 @@ export interface IPost {
 
 export interface IPostModel extends IPost, Document {}
 
+const ContentSchema = new Schema({
+  type: { type: String, required: true },
+  imgUrl: { type: String, required: false },
+  imgName: { type: String, required: false },
+  text: { type: String, required: false }
+});
+
 const PostSchema: Schema = new Schema({
   title: { type: String, required: true },
   text: { type: String, required: false },
   tags: { type: [String], required: false },
   imgUrl: { type: String, required: false },
+  content: { type: [ContentSchema], required: false },
   author: { type: Schema.Types.ObjectId, required: true, ref: 'User' },
   score: { type: Number, required: false, default: 0 },
   viewsAmount: { type: Number, required: false, default: 0 },
@@ -36,7 +44,6 @@ const PostSchema: Schema = new Schema({
     lastHotCheckDate: { type: Number, required: true, default: new Date().getTime() },
     lastHotCheckPoints: { type: Number, required: true, default: 0 }
   }
-
 }, { timestamps: true });
 
 export default mongoose.model<IPostModel>('Post', PostSchema);
