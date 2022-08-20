@@ -1,7 +1,7 @@
-import { NextFunction, Response } from 'express';
+import { Express, NextFunction, Response } from 'express';
 import mongoose from 'mongoose';
 import Crypto from 'crypto';
-import ImageKit from "imagekit";
+import ImageKit from 'imagekit';
 import { fileTypeFromBuffer } from 'file-type';
 import Post, { IPostModel } from '../models/Posts.model';
 import User, { IUser, IUserModel } from '../models/User.model';
@@ -9,27 +9,28 @@ import { AuthRequest } from '../middleware/Authentication';
 import { marks } from '../models/marks.type';
 import { sort } from '../models/postsSort.type';
 
+type fileType = {[fieldname: string]: Express.Multer.File[] } | Express.Multer.File[] | undefined;
+
 const IMAGEKIT_ID = process.env.IMAGEKIT_ID || '';
 const IMAGEKIT_URL = `https://ik.imagekit.io/${IMAGEKIT_ID}`;
 
 const imagekit = new ImageKit({
-    publicKey : process.env.IMAGEKIT_PUBLIC_KEY || '',
-    privateKey : process.env.IMAGEKIT_PRIVATE_KEY || '',
-    urlEndpoint : IMAGEKIT_URL
+  publicKey: process.env.IMAGEKIT_PUBLIC_KEY || '',
+  privateKey: process.env.IMAGEKIT_PRIVATE_KEY || '',
+  urlEndpoint: IMAGEKIT_URL
 });
-
 
 const validateContent = (content: Array<{type: string, text: string, imgUrl: string, imgName: string}>) => {
   content.forEach((item) => {
-    if (item.type == 'text') {
+    if (item.type === 'text') {
       if (!item.text) {
         return { result: false, message: 'Text required for content type "text"' };
       }
-    } else if (item.type == 'imgUrl') {
+    } else if (item.type === 'imgUrl') {
       if (!item.imgUrl) {
         return { result: false, message: 'Image URL required for content type "imgUrl"' };
       }
-    } else if (item.type == 'imgName') {
+    } else if (item.type === 'imgName') {
       if (!item.imgName) {
         return { result: false, message: 'Image name required for content type "imgName"' };
       }
@@ -40,10 +41,10 @@ const validateContent = (content: Array<{type: string, text: string, imgUrl: str
   return { result: true, message: '' };
 };
 
-
-const validateFiles = async (files: {[fieldname: string]: Express.Multer.File[] } | Express.Multer.File[] | undefined) => {
+const validateFiles = async (files: fileType) => {
   const supportedMimeTypes = ['image/jpeg', 'image/png', 'image/webp'];
-  for (let file of files) {
+
+  for (const file of files!) {
     const fileType = await fileTypeFromBuffer(file.buffer);
     if (!fileType || !supportedMimeTypes.includes(fileType.mime)) {
       return { result: false, message: 'Unsupported file type' };
@@ -52,64 +53,60 @@ const validateFiles = async (files: {[fieldname: string]: Express.Multer.File[] 
   return { result: true, message: '' };
 };
 
-
-const processImages = async (content: Array<{type: string, text: string, imgUrl: string, imgName: string}>,
-                            files: {[fieldname: string]: Express.Multer.File[] } | Express.Multer.File[] | undefined) => {
+const processImages = async (content: Array<{type: string, text: string, imgUrl: string, imgName: string}>, files: fileType) => {
   const fileMap = new Map();
-  for (let file of files) {
+  for (const file of files!) {
     fileMap.set(file.originalname, file);
   }
 
-  const result_content = [];
-  for (let item of content) {
+  const resultContent = [];
+  for (const item of content) {
     if (item.type === 'text') {
       // item is text, no processing needed
-      result_content.push(item);
+      resultContent.push(item);
     } else {
       if (item.type === 'imgUrl' && item.imgUrl.includes(IMAGEKIT_URL)) {
         // image is already uploaded
-        result_content.push(item);
+        resultContent.push(item);
       } else {
         // need to upload the image
         const uploadResult = await uploadFile(item, fileMap);
         if (uploadResult.result) {
-          result_content.push(uploadResult.item);
+          resultContent.push(uploadResult.item);
         } else {
-          return { result: false, message: uploadResult.message, content: [] }
+          return { result: false, message: uploadResult.message, content: [] };
         }
       }
     }
   }
 
-  return { result: true, message: '', content: result_content };
+  return { result: true, message: '', content: resultContent };
 };
 
-
-const uploadFile = async (item: {type: string, text: string, imgUrl: string, imgName: string}, fileMap: Map) => {
-  const post_data = {
+const uploadFile = async (item: {type: string, text: string, imgUrl: string, imgName: string}, fileMap: Map<string, fileType>) => {
+  const postData = {
     file: '',
     fileName: Crypto.randomBytes(32).toString('base64'),
     folder: '/user_uploads/'
   };
 
   if (item.type === 'imgUrl') {
-    post_data.file = item.imgUrl;
+    postData.file = item.imgUrl;
   } else {
     const file = fileMap.get(item.imgName);
     if (!file) {
       return { result: false, message: `File ${item.imgName} not found in request`, item: null };
     }
-    post_data.file = file.buffer;
+    postData.file = file.buffer;
   }
 
   try {
-    const response = await imagekit.upload(post_data);
+    const response = await imagekit.upload(postData);
     return { result: true, message: '', item: { type: 'imgUrl', imgUrl: response.url } };
   } catch (err) {
     return { result: false, message: `Error while uploading image: ${err}`, item: null };
   }
 };
-
 
 const createPost = async (req: AuthRequest, res: Response, next: NextFunction) => {
   const { title, text, tags, imgUrl, content } = req.body;
