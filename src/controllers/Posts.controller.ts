@@ -2,7 +2,7 @@ import { Express, NextFunction, Response } from 'express';
 import mongoose from 'mongoose';
 import Crypto from 'crypto';
 import ImageKit from 'imagekit';
-import { fileTypeFromBuffer } from 'file-type';
+import { fromBuffer } from 'file-type';
 import Post, { IPostModel } from '../models/Posts.model';
 import User, { IUser, IUserModel } from '../models/User.model';
 import { AuthRequest } from '../middleware/Authentication';
@@ -45,7 +45,7 @@ const validateFiles = async (files: fileType) => {
   const supportedMimeTypes = ['image/jpeg', 'image/png', 'image/webp'];
 
   for (const file of files!) {
-    const fileType = await fileTypeFromBuffer(file.buffer);
+    const fileType = await fromBuffer(file.buffer);
     if (!fileType || !supportedMimeTypes.includes(fileType.mime)) {
       return { result: false, message: 'Unsupported file type' };
     }
