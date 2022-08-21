@@ -8,6 +8,7 @@ import User, { IUser, IUserModel } from '../models/User.model';
 import { AuthRequest } from '../middleware/Authentication';
 import { marks } from '../models/marks.type';
 import { sort } from '../models/postsSort.type';
+import {UploadOptions} from "imagekit/dist/libs/interfaces";
 
 type fileType = Express.Multer.File[] | undefined;
 
@@ -21,7 +22,7 @@ const imagekit = new ImageKit({
 });
 
 const validateContent = (content: Array<{type: string, text: string, imgUrl: string, imgName: string}>) => {
-  content.forEach((item) => {
+  for (const item of content) {
     if (item.type === 'text') {
       if (!item.text) {
         return { result: false, message: 'Text required for content type "text"' };
@@ -37,17 +38,19 @@ const validateContent = (content: Array<{type: string, text: string, imgUrl: str
     } else {
       return { result: false, message: `Invalid content type ${item.type}` };
     }
-  });
+  }
   return { result: true, message: '' };
 };
 
 const validateFiles = async (files: fileType) => {
   const supportedMimeTypes = ['image/jpeg', 'image/png', 'image/webp'];
 
-  for (const file of files!) {
-    const fileType = await fromBuffer(file.buffer);
-    if (!fileType || !supportedMimeTypes.includes(fileType.mime)) {
-      return { result: false, message: 'Unsupported file type' };
+  if (files) {
+    for (const file of files!) {
+      const fileType = await fromBuffer(file.buffer);
+      if (!fileType || !supportedMimeTypes.includes(fileType.mime)) {
+        return { result: false, message: 'Unsupported file type' };
+      }
     }
   }
   return { result: true, message: '' };
@@ -55,8 +58,10 @@ const validateFiles = async (files: fileType) => {
 
 const processImages = async (content: Array<{type: string, text: string, imgUrl: string, imgName: string}>, files: fileType) => {
   const fileMap = new Map();
-  for (const file of files!) {
-    fileMap.set(file.originalname, file);
+  if (files) {
+    for (const file of files!) {
+      fileMap.set(file.originalname, file);
+    }
   }
 
   const resultContent = [];
@@ -84,9 +89,9 @@ const processImages = async (content: Array<{type: string, text: string, imgUrl:
 };
 
 const uploadFile = async (item: {type: string, text: string, imgUrl: string, imgName: string}, fileMap: Map<string, Express.Multer.File>) => {
-  const postData = {
-    file: '',
-    fileName: Crypto.randomBytes(32).toString('base64'),
+  const postData: Record<string, any> = {
+    fileName: Crypto.randomBytes(12).toString('hex'),
+    useUniqueFileName: false,
     folder: '/user_uploads/'
   };
 
@@ -97,14 +102,21 @@ const uploadFile = async (item: {type: string, text: string, imgUrl: string, img
     if (!file) {
       return { result: false, message: `File ${item.imgName} not found in request`, item: null };
     }
-    postData.file = file.buffer.toString();
+    postData.file = file.buffer;
   }
 
   try {
-    const response = await imagekit.upload(postData);
+    const response = await imagekit.upload(postData as UploadOptions);
     return { result: true, message: '', item: { type: 'imgUrl', imgUrl: response.url } };
   } catch (err) {
-    return { result: false, message: `Error while uploading image: ${err}`, item: null };
+    let msg = '';
+    if (err instanceof Error) {
+      msg = err.message;
+    } else {
+      console.error(err);
+      msg = 'Unknown error';
+    }
+    return { result: false, message: `Error while uploading image: ${msg}`, item: null };
   }
 };
 

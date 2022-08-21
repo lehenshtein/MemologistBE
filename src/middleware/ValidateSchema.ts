@@ -7,6 +7,8 @@ import { IComment } from '../models/Comment.model';
 export const ValidateSchema = (schema: ObjectSchema) => {
   return async (req: Request, res: Response, next: NextFunction) => {
     try {
+      console.log(req.body);
+      console.log(req.files);
       await schema.validateAsync(req.body);
 
       next();

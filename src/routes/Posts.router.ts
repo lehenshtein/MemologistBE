@@ -3,6 +3,7 @@ import multer from 'multer';
 import controller from '../controllers/Posts.controller';
 import { Schema, ValidateSchema } from '../middleware/ValidateSchema';
 import { requireAuthentication } from '../middleware/Authentication';
+import { multipartConvert } from "../middleware/MultipartConvert";
 
 const storage = multer.memoryStorage();
 const upload = multer({
@@ -16,16 +17,18 @@ const router = express.Router();
 
 router.post('', [
   requireAuthentication as express.RequestHandler,
-  ValidateSchema(Schema.post.create),
-  upload.array('images', 10)
+  upload.array('images', 10),
+  multipartConvert,
+  ValidateSchema(Schema.post.create)
 ], controller.createPost);
 router.get('/:postId', controller.readPost);
 router.get('', controller.readAll);
 router.get('/user/:name', controller.getPostsForUser);
 router.patch('/:postId', [
   requireAuthentication as express.RequestHandler,
-  ValidateSchema(Schema.post.update),
-  upload.array('images', 10)
+  upload.array('images', 10),
+  multipartConvert,
+  ValidateSchema(Schema.post.update)
 ], controller.updatePost);
 router.delete('/:postId', controller.deletePost);
 
