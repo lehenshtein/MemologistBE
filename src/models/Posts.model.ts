@@ -26,6 +26,17 @@ const PostSchema: Schema = new Schema({
   text: { type: String, required: false },
   tags: { type: [String], required: false },
   imgUrl: { type: String, required: false },
+  content: {
+    type: [
+      {
+        _id: false,
+        type: { type: String, required: true },
+        imgUrl: { type: String, required: false },
+        text: { type: String, required: false }
+      }
+    ],
+    required: false
+  },
   author: { type: Schema.Types.ObjectId, required: true, ref: 'User' },
   score: { type: Number, required: false, default: 0 },
   viewsAmount: { type: Number, required: false, default: 0 },
@@ -36,7 +47,6 @@ const PostSchema: Schema = new Schema({
     lastHotCheckDate: { type: Number, required: true, default: new Date().getTime() },
     lastHotCheckPoints: { type: Number, required: true, default: 0 }
   }
-
 }, { timestamps: true });
 
 export default mongoose.model<IPostModel>('Post', PostSchema);

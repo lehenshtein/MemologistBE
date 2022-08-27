@@ -1,31 +1,195 @@
-import { NextFunction, Request, Response } from 'express';
+import { Express, NextFunction, Response } from 'express';
 import mongoose from 'mongoose';
+import Crypto from 'crypto';
+import ImageKit from 'imagekit';
+import { fromBuffer } from 'file-type';
 import Post, { IPostModel } from '../models/Posts.model';
 import User, { IUser, IUserModel } from '../models/User.model';
 import { AuthRequest } from '../middleware/Authentication';
 import { marks } from '../models/marks.type';
 import { sort } from '../models/postsSort.type';
+import {UploadOptions} from "imagekit/dist/libs/interfaces";
 
-const createPost = (req: AuthRequest, res: Response, next: NextFunction) => {
-  const { title, text, tags, imgUrl } = req.body;
+type fileType = Express.Multer.File[] | undefined;
+
+const IMAGEKIT_ID = process.env.IMAGEKIT_ID || '';
+const IMAGEKIT_URL = `https://ik.imagekit.io/${IMAGEKIT_ID}`;
+
+const imagekit = new ImageKit({
+  publicKey: process.env.IMAGEKIT_PUBLIC_KEY || '',
+  privateKey: process.env.IMAGEKIT_PRIVATE_KEY || '',
+  urlEndpoint: IMAGEKIT_URL
+});
+
+const validateContent = (content: Array<{type: string, text: string, imgUrl: string, imgName: string}>) => {
+  for (const item of content) {
+    if (item.type === 'text') {
+      if (!item.text) {
+        return { result: false, message: 'Text required for content type "text"' };
+      }
+    } else if (item.type === 'imgUrl') {
+      if (!item.imgUrl) {
+        return { result: false, message: 'Image URL required for content type "imgUrl"' };
+      }
+    } else if (item.type === 'imgName') {
+      if (!item.imgName) {
+        return { result: false, message: 'Image name required for content type "imgName"' };
+      }
+    } else {
+      return { result: false, message: `Invalid content type ${item.type}` };
+    }
+  }
+  return { result: true, message: '' };
+};
+
+const validateFiles = async (files: fileType) => {
+  const supportedMimeTypes = ['image/jpeg', 'image/png', 'image/webp'];
+
+  if (files) {
+    for (const file of files!) {
+      const fileType = await fromBuffer(file.buffer);
+      if (!fileType || !supportedMimeTypes.includes(fileType.mime)) {
+        return { result: false, message: 'Unsupported file type' };
+      }
+    }
+  }
+  return { result: true, message: '' };
+};
+
+const processImages = async (content: Array<{type: string, text: string, imgUrl: string, imgName: string}>, files: fileType) => {
+  const fileMap = new Map();
+  if (files) {
+    for (const file of files!) {
+      fileMap.set(file.originalname, file);
+    }
+  }
+
+  const resultContent = [];
+  for (const item of content) {
+    if (item.type === 'text') {
+      // item is text, no processing needed
+      resultContent.push(item);
+    } else {
+      if (item.type === 'imgUrl' && item.imgUrl.includes(IMAGEKIT_URL)) {
+        // image is already uploaded
+        resultContent.push(item);
+      } else {
+        // need to upload the image
+        const uploadResult = await uploadFile(item, fileMap);
+        if (uploadResult.result) {
+          resultContent.push(uploadResult.item);
+        } else {
+          return { result: false, message: uploadResult.message, content: [] };
+        }
+      }
+    }
+  }
+
+  return { result: true, message: '', content: resultContent };
+};
+
+const uploadFile = async (item: {type: string, text: string, imgUrl: string, imgName: string}, fileMap: Map<string, Express.Multer.File>) => {
+  const postData: Record<string, any> = {
+    fileName: Crypto.randomBytes(12).toString('hex'),
+    useUniqueFileName: false,
+    folder: '/user_uploads/'
+  };
+
+  if (item.type === 'imgUrl') {
+    postData.file = item.imgUrl;
+  } else {
+    const file = fileMap.get(item.imgName);
+    if (!file) {
+      return { result: false, message: `File ${item.imgName} not found in request`, item: null };
+    }
+    postData.file = file.buffer;
+  }
+
+  try {
+    const response = await imagekit.upload(postData as UploadOptions);
+    return { result: true, message: '', item: { type: 'imgUrl', imgUrl: response.url } };
+  } catch (err) {
+    let msg = '';
+    if (err instanceof Error) {
+      msg = err.message;
+    } else {
+      console.error(err);
+      msg = 'Unknown error';
+    }
+    return { result: false, message: `Error while uploading image: ${msg}`, item: null };
+  }
+};
+
+const createPost = async (req: AuthRequest, res: Response, next: NextFunction) => {
+  const { title, text, tags, imgUrl, content } = req.body;
   const author: IUser = req.user?._id;
   if (!author) {
     return;
   }
   if (req.user?.status === 'banned' || req.user?.status === 'muted') {
-    return res.status(403).json({ message: 'You was banned or muted' });
+    return res.status(403).json({ message: 'You were banned or muted' });
   }
+  const contentValidation = validateContent(content);
+  if (!contentValidation.result) {
+    return res.status(401).json({ message: contentValidation.message });
+  }
+  const fileValidation = await validateFiles(req.files as fileType);
+  if (!fileValidation.result) {
+    return res.status(401).json({ message: fileValidation.message });
+  }
+  const fileUpload = await processImages(content, req.files as fileType);
+  if (!fileUpload.result) {
+    return res.status(401).json({ message: fileUpload.message });
+  }
+
   const post = new Post({
     _id: new mongoose.Types.ObjectId(),
     title,
     author,
     text,
     tags,
-    imgUrl
+    imgUrl,
+    content: fileUpload.content
   });
 
   return post.save()
     .then(post => res.status(201).json(post))
+    .catch(err => res.status(500).json({ message: 'Server error', err }));
+};
+
+const updatePost = async (req: AuthRequest, res: Response, next: NextFunction) => {
+  const { postId } = req.params;
+
+  return Post.findById(postId)
+    .then(async post => {
+      if (post) {
+        if (post.author._id !== req.user?._id) {
+          return res.status(403).json({ message: 'Not your post' });
+        }
+
+        const contentValidation = validateContent(req.body.content);
+        if (!contentValidation.result) {
+          return res.status(401).json({ message: contentValidation.message });
+        }
+        const fileValidation = await validateFiles(req.files as fileType);
+        if (!fileValidation.result) {
+          return res.status(401).json({ message: fileValidation.message });
+        }
+        const fileUpload = await processImages(req.body.content, req.files as fileType);
+        if (!fileUpload.result) {
+          return res.status(401).json({ message: fileUpload.message });
+        }
+        req.body.content = fileUpload.content;
+
+        post.set(req.body);
+
+        return post.save()
+          .then(post => res.status(201).json(post))
+          .catch(err => res.status(500).json({ message: 'Server error', err }));
+      } else {
+        return res.status(404).json({ message: 'not found' });
+      }
+    })
     .catch(err => res.status(500).json({ message: 'Server error', err }));
 };
 
@@ -153,24 +317,6 @@ function mapPostsMarks (post: IPostModel, user: IUserModel): IPostModel {
   mark ? post.marked = mark : post.marked = 'default';
   return post;
 }
-
-const updatePost = (req: Request, res: Response, next: NextFunction) => {
-  const { postId } = req.params;
-
-  return Post.findById(postId)
-    .then(post => {
-      if (post) {
-        post.set(req.body);
-
-        return post.save()
-          .then(post => res.status(201).json(post))
-          .catch(err => res.status(500).json({ message: 'Server error', err }));
-      } else {
-        return res.status(404).json({ message: 'not found' });
-      }
-    })
-    .catch(err => res.status(500).json({ message: 'Server error', err }));
-};
 
 const deletePost = (req: AuthRequest, res: Response, next: NextFunction) => {
   const { postId } = req.params;

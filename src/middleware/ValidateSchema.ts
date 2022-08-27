@@ -7,6 +7,8 @@ import { IComment } from '../models/Comment.model';
 export const ValidateSchema = (schema: ObjectSchema) => {
   return async (req: Request, res: Response, next: NextFunction) => {
     try {
+      console.log(req.body);
+      console.log(req.files);
       await schema.validateAsync(req.body);
 
       next();
@@ -22,19 +24,35 @@ const imgRegex = /^(ftp|http|https):\/\/.+\.(jpg|jpeg|png|webp|avif|gif|svg)/i;
 
 export const Schema = {
   post: {
-    create: Joi.object<IPost>({
+    create: Joi.object({
       title: Joi.string().required().min(5).max(50),
       text: Joi.string().empty('').min(10).max(2000),
       tags: Joi.array().items(Joi.string()),
-      imgUrl: Joi.string().empty(null).regex(imgRegex).max(240)
-    }).or('text', 'imgUrl'),
+      imgUrl: Joi.string().empty(null).regex(imgRegex).max(240),
+      content: Joi.array().items(
+        Joi.object({
+          type: Joi.string().valid('text', 'imgUrl', 'imgName').required(),
+          imgUrl: Joi.string().min(5).max(200),
+          imgName: Joi.string().min(5).max(200),
+          text: Joi.string().min(10).max(2000)
+        })
+      )
+    }),
 
-    update: Joi.object<IPost>({
+    update: Joi.object({
       title: Joi.string().required().min(5).max(50),
       text: Joi.string().empty('').min(10).max(2000),
       tags: Joi.array().items(Joi.string()),
-      imgUrl: Joi.string().empty(null).regex(imgRegex).max(240)
-    }).or('text', 'imgUrl')
+      imgUrl: Joi.string().empty(null).regex(imgRegex).max(240),
+      content: Joi.array().items(
+        Joi.object({
+          type: Joi.string().valid('text', 'imgUrl', 'imgName').required(),
+          imgUrl: Joi.string().min(5).max(200),
+          imgName: Joi.string().min(5).max(200),
+          text: Joi.string().min(10).max(2000)
+        })
+      )
+    })
   },
 
   comment: {
