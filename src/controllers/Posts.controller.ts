@@ -8,7 +8,7 @@ import User, { IUser, IUserModel } from '../models/User.model';
 import { AuthRequest } from '../middleware/Authentication';
 import { marks } from '../models/marks.type';
 import { sort } from '../models/postsSort.type';
-import {UploadOptions} from "imagekit/dist/libs/interfaces";
+import { UploadOptions } from 'imagekit/dist/libs/interfaces';
 
 type fileType = Express.Multer.File[] | undefined;
 
@@ -131,15 +131,15 @@ const createPost = async (req: AuthRequest, res: Response, next: NextFunction) =
   }
   const contentValidation = validateContent(content);
   if (!contentValidation.result) {
-    return res.status(401).json({ message: contentValidation.message });
+    return res.status(400).json({ message: contentValidation.message });
   }
   const fileValidation = await validateFiles(req.files as fileType);
   if (!fileValidation.result) {
-    return res.status(401).json({ message: fileValidation.message });
+    return res.status(400).json({ message: fileValidation.message });
   }
   const fileUpload = await processImages(content, req.files as fileType);
   if (!fileUpload.result) {
-    return res.status(401).json({ message: fileUpload.message });
+    return res.status(400).json({ message: fileUpload.message });
   }
 
   const post = new Post({
@@ -169,15 +169,15 @@ const updatePost = async (req: AuthRequest, res: Response, next: NextFunction) =
 
         const contentValidation = validateContent(req.body.content);
         if (!contentValidation.result) {
-          return res.status(401).json({ message: contentValidation.message });
+          return res.status(400).json({ message: contentValidation.message });
         }
         const fileValidation = await validateFiles(req.files as fileType);
         if (!fileValidation.result) {
-          return res.status(401).json({ message: fileValidation.message });
+          return res.status(400).json({ message: fileValidation.message });
         }
         const fileUpload = await processImages(req.body.content, req.files as fileType);
         if (!fileUpload.result) {
-          return res.status(401).json({ message: fileUpload.message });
+          return res.status(400).json({ message: fileUpload.message });
         }
         req.body.content = fileUpload.content;
 

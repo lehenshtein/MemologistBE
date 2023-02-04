@@ -25,10 +25,10 @@ if (config.env === 'prod') {
   selfUrl = 'http://memologist-prod-be.herokuapp.com/';
 }
 function StartServer () {
-  setInterval(function () {
-    http.get(selfUrl);
-    http.get(config.frontUrl);
-  }, 1200000); // every 20 minutes (1200000)
+  // setInterval(function () {
+  //   http.get(selfUrl);
+  //   http.get(config.frontUrl + 'auth/sign-in');
+  // }, 1200000); // every 20 minutes (1200000)
 
   if (config.env !== 'local') { // disabling cron for local env
     checkHotPosts();
