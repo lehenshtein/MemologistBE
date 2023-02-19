@@ -7,7 +7,7 @@ const NODE_ENV = process.env.NODE_ENV || 'dev';
 const CLUSTER_NAME = process.env.CLUSTER_NAME || '';
 const MONGO_URL = NODE_ENV === 'prod'
   ? `mongodb+srv://${MONGO_USERNAME}:${MONGO_PASSWORD}@cluster0.${CLUSTER_NAME}.mongodb.net`
-  : `mongodb+srv://${MONGO_USERNAME}:${MONGO_PASSWORD}@cluster0.i2yk4qd.mongodb.net/`;
+  : `mongodb+srv://${MONGO_USERNAME}:${MONGO_PASSWORD}@cluster0.${CLUSTER_NAME}.mongodb.net/`; // dev cluster should be here
 const EMAIL_LOGIN = process.env.EMAIL_LOGIN || '';
 const EMAIL_PASSWORD = process.env.EMAIL_PASSWORD || '';
 
