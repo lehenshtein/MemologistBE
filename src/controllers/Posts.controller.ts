@@ -260,6 +260,11 @@ const getPostsForUser = async (req: AuthRequest, res: Response, next: NextFuncti
   const page = req.query.page || 1;
   const limit = req.query.limit || 10;
   const sort: sort = 'new';
+  const search: string = req.query.search as string || '';
+  let searchField = {};
+  if (search) {
+    searchField = { $text: { $search: search } };
+  }
 
   let authorId;
   if (name && name !== 'undefined') {
@@ -276,7 +281,7 @@ const getPostsForUser = async (req: AuthRequest, res: Response, next: NextFuncti
   }
 
   try {
-    const posts: IPostModel[] = await Post.find({ author: authorId })
+    const posts: IPostModel[] = await Post.find({ author: authorId, ...searchField })
       .sort(sort)
       .limit(+limit)
       .skip((+page - 1) * +limit)
@@ -299,9 +304,8 @@ const getPostsForUser = async (req: AuthRequest, res: Response, next: NextFuncti
 
 function sortPosts (sort: sort, search: string) {
   let searchField = {};
-  const regexp = new RegExp(search, 'i');
   if (search) {
-    searchField = { $or: [{ title: regexp }, { tags: regexp }] };
+    searchField = { $text: { $search: search } };
   }
   if (sort === 'new') {
     return Post.find(searchField)
