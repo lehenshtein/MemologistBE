@@ -49,4 +49,7 @@ const PostSchema: Schema = new Schema({
   }
 }, { timestamps: true });
 
+PostSchema.index({ title: 'text', text: 'text', tags: 'text' },
+  { name: 'Posts_text_index', weights: { title: 30, text: 20, tags: 10 } });
+
 export default mongoose.model<IPostModel>('Post', PostSchema);

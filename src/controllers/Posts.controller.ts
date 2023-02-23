@@ -231,9 +231,10 @@ const readAll = async (req: AuthRequest, res: Response, next: NextFunction) => {
   const page = req.query.page || 1;
   const limit = req.query.limit || 10;
   const sort: sort = req.query.sort as sort || 'hot';
+  const search: string = req.query.search as string || '';
 
   try {
-    const posts: IPostModel[] = await sortPosts(sort)
+    const posts: IPostModel[] = await sortPosts(sort, search)
       .limit(+limit)
       .skip((+page - 1) * +limit)
       .populate('author', 'name -_id')
@@ -259,6 +260,11 @@ const getPostsForUser = async (req: AuthRequest, res: Response, next: NextFuncti
   const page = req.query.page || 1;
   const limit = req.query.limit || 10;
   const sort: sort = 'new';
+  const search: string = req.query.search as string || '';
+  let searchField = {};
+  if (search) {
+    searchField = { $text: { $search: search } };
+  }
 
   let authorId;
   if (name && name !== 'undefined') {
@@ -275,7 +281,7 @@ const getPostsForUser = async (req: AuthRequest, res: Response, next: NextFuncti
   }
 
   try {
-    const posts: IPostModel[] = await Post.find({ author: authorId })
+    const posts: IPostModel[] = await Post.find({ author: authorId, ...searchField })
       .sort(sort)
       .limit(+limit)
       .skip((+page - 1) * +limit)
@@ -296,19 +302,23 @@ const getPostsForUser = async (req: AuthRequest, res: Response, next: NextFuncti
   }
 };
 
-function sortPosts (sort: sort) {
+function sortPosts (sort: sort, search: string) {
+  let searchField = {};
+  if (search) {
+    searchField = { $text: { $search: search } };
+  }
   if (sort === 'new') {
-    return Post.find()
+    return Post.find(searchField)
       .sort('-createdAt');
   }
   if (sort === 'best') {
-    return Post.find()
+    return Post.find(searchField)
       .sort('-score');
   }
   const lastDaysToTakePosts = 7;
   const d = new Date();
   d.setUTCDate(d.getUTCDate() - lastDaysToTakePosts);
-  return Post.find({ createdAt: { $gt: d } })
+  return Post.find({ createdAt: { $gt: d }, ...searchField })
     .sort('-hotPoints');
 }
 
